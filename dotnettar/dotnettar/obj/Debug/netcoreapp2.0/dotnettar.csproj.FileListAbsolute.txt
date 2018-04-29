@@ -1,0 +1,9 @@
+C:\dev\dotnettar\dotnettar\dotnettar\bin\Debug\netcoreapp2.0\dotnettar.deps.json
+C:\dev\dotnettar\dotnettar\dotnettar\bin\Debug\netcoreapp2.0\dotnettar.dll
+C:\dev\dotnettar\dotnettar\dotnettar\bin\Debug\netcoreapp2.0\dotnettar.pdb
+C:\dev\dotnettar\dotnettar\dotnettar\obj\Debug\netcoreapp2.0\dotnettar.csprojResolveAssemblyReference.cache
+C:\dev\dotnettar\dotnettar\dotnettar\obj\Debug\netcoreapp2.0\dotnettar.csproj.CoreCompileInputs.cache
+C:\dev\dotnettar\dotnettar\dotnettar\obj\Debug\netcoreapp2.0\dotnettar.AssemblyInfoInputs.cache
+C:\dev\dotnettar\dotnettar\dotnettar\obj\Debug\netcoreapp2.0\dotnettar.AssemblyInfo.cs
+C:\dev\dotnettar\dotnettar\dotnettar\obj\Debug\netcoreapp2.0\dotnettar.dll
+C:\dev\dotnettar\dotnettar\dotnettar\obj\Debug\netcoreapp2.0\dotnettar.pdb
