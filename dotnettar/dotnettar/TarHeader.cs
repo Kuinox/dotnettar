@@ -103,7 +103,7 @@ namespace dotnettar
 		{
 			if(!stream.CanWrite) throw new IOException("Cannot write to given stream");
 			var name = Encoding.ASCII.GetBytes(_name.PadRight(100, '\0'));
-			var permissions = Encoding.ASCII.GetBytes(_fileMode.ToString());
+			var permissions = Encoding.ASCII.GetBytes(_fileMode.ToString()+'\0');
 			var ownerId = Encoding.ASCII.GetBytes(Convert.ToString(_ownerId, 8).PadLeft(7, '0')+"\0");
 			var groupId = Encoding.ASCII.GetBytes(Convert.ToString(_groupId, 8).PadLeft(7, '0')+"\0");
 			var fileSize = Encoding.ASCII.GetBytes(Convert.ToString(FileSize, 8).PadLeft(11, '0')+"\0");
