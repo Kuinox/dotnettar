@@ -1,0 +1,11 @@
+C:\dev\dotnettar\dotnettar\dotnettar\bin\MCD\Debug\netcoreapp2.0\dotnettar.deps.json
+C:\dev\dotnettar\dotnettar\dotnettar\bin\MCD\Debug\netcoreapp2.0\dotnettar.dll
+C:\dev\dotnettar\dotnettar\dotnettar\bin\MCD\Debug\netcoreapp2.0\dotnettar.pdb
+C:\dev\dotnettar\dotnettar\dotnettar\obj\MCD\Debug\netcoreapp2.0\dotnettar.csproj.CoreCompileInputs.cache
+C:\dev\dotnettar\dotnettar\dotnettar\obj\MCD\Debug\netcoreapp2.0\dotnettar.AssemblyInfoInputs.cache
+C:\dev\dotnettar\dotnettar\dotnettar\obj\MCD\Debug\netcoreapp2.0\dotnettar.AssemblyInfo.cs
+C:\dev\dotnettar\dotnettar\dotnettar\obj\MCD\Debug\netcoreapp2.0\dotnettar.dll
+C:\dev\dotnettar\dotnettar\dotnettar\obj\MCD\Debug\netcoreapp2.0\dotnettar.pdb
+C:\dev\dotnettar\dotnettar\dotnettar\output.xml\dotnettar.deps.json
+C:\dev\dotnettar\dotnettar\dotnettar\output.xml\dotnettar.dll
+C:\dev\dotnettar\dotnettar\dotnettar\output.xml\dotnettar.pdb
