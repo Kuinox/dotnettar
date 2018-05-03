@@ -14,7 +14,6 @@ namespace dotnettar
 	    public TarHeader Header { get; private set; }
 
 	    long _offset;
-	    long _pointer;
 
 	    TarFile() { }
 	    public static async Task<TarFile> FromTarStream(Stream stream, long offset)
@@ -23,10 +22,8 @@ namespace dotnettar
 		    {
 			    Header = await TarHeader.FromStream(stream),
 			    _file = stream,
-				_pointer = 0,
 				_offset = offset + TarHeader.BlockSize
 			};
-		    
 		    return output;
 	    }
 
@@ -35,18 +32,11 @@ namespace dotnettar
 	    /// The tar will be valid if you write only TarFile objects
 	    /// </summary>
 	    /// <returns></returns>
-	    public void AddTarFileToTar(Stream streamToWrite)
+	    public async void AddToTar(Stream streamToWrite)
 	    {
-			
+		    await Header.WriteToStream(streamToWrite);
+		    await _file.CopyToAsync(streamToWrite);
 	    }
-
-
-		bool IsPositionInStream()
-	    {
-		    return _file.Position >= _offset && _file.Position <= _offset + Length;
-	    }
-
-	    public int FileCheckSum => Header.CheckSum;
 
 	    public override void Flush() => throw new NotSupportedException();
 
@@ -55,17 +45,9 @@ namespace dotnettar
 		    return _file.Read(buffer, offset, count);
 	    }
 
-	    public override long Seek(long offset, SeekOrigin origin)
-	    {
-		    return _file.Seek(offset, origin);
-	    }
+	    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
 
-	    int GetBlockLength()
-	    {
-		    return (int)Math.Ceiling((double)Header.FileSize / TarHeader.BlockSize);
-	    }
-
-	    public override void SetLength(long value) => throw new NotSupportedException();
+		public override void SetLength(long value) => throw new NotSupportedException();
 
 	    public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 
@@ -76,6 +58,20 @@ namespace dotnettar
 	    public override long Position {
 		    get => _file.Position - _offset;
 		    set => _file.Position = value + _offset;
+	    }
+
+		protected override void Dispose(bool disposing)
+		{
+			int toSkip = (int) (TarHeader.BlockSize - _file.Length % TarHeader.BlockSize);
+		    if (_file.CanSeek)
+		    {
+			    _file.Seek(toSkip, SeekOrigin.Current);
+		    }
+		    else
+		    {
+			    _file.ReadAsync(new byte[]{}, 0, toSkip);
+		    }
+		    base.Dispose(disposing);
 	    }
     }
 }

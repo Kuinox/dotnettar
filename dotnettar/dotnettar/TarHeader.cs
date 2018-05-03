@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -29,7 +27,6 @@ namespace dotnettar
 		int _deviceMajorNumber;
 		int _deviceMinorNumber;
 		string _fileNamePrefix;
-		
 
 		TarHeader() { }
 		public static async Task<TarHeader> FromStream(Stream stream)
@@ -74,7 +71,6 @@ namespace dotnettar
 			if (await stream.ReadAsync(deviceMinorNumber, 0, deviceMinorNumber.Length) == 0) throw new EndOfStreamException("Invalid header");
 			if (await stream.ReadAsync(fileNamePrefix   , 0, fileNamePrefix.Length   ) == 0) throw new EndOfStreamException("Invalid header");
 			if (await stream.ReadAsync(filler           , 0, filler.Length           ) == 0) throw new EndOfStreamException("Invalid header");
-			var checksum = OctalToDecimal(int.Parse(Encoding.ASCII.GetString(checkSum).Replace("\0", string.Empty)));
 			if(Encoding.ASCII.GetString(uStar) != "ustar\0") throw new InvalidDataException("Invalid tar file, or non POSIX.1-1988 tar. Only POSIX.1-1988 tar or better are supported.");
 			var output = new TarHeader //TODO: implement try catch
 			{
@@ -99,6 +95,8 @@ namespace dotnettar
 			{
 				output._deviceMinorNumber = 0;
 			}
+			var checksum = OctalToDecimal(int.Parse(Encoding.ASCII.GetString(checkSum).Replace("\0", string.Empty)));
+			if (output.CheckSum != checksum) throw new InvalidDataException("Invalid header's checksum.");
 			return output;
 		}
 
