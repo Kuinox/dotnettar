@@ -7,22 +7,20 @@ using System.Threading.Tasks;
 namespace dotnettar
 {
 	/// <inheritdoc />
-	class TarFile : Stream
+	public class TarFile : Stream
     {
 	    
 	    Stream _file;
 	    public TarHeader Header { get; private set; }
 
-	    long _offset;
 
 	    TarFile() { }
-	    public static async Task<TarFile> FromTarStream(Stream stream, long offset)
+	    public static async Task<TarFile> FromTarStream(Stream stream)
 	    {
 		    var output = new TarFile
 		    {
 			    Header = await TarHeader.FromStream(stream),
-			    _file = stream,
-				_offset = offset + TarHeader.BlockSize
+			    _file = stream
 			};
 		    return output;
 	    }
@@ -56,13 +54,13 @@ namespace dotnettar
 	    public override bool CanWrite => false;
 	    public override long Length => Header.FileSize;
 	    public override long Position {
-		    get => _file.Position - _offset;
-		    set => _file.Position = value + _offset;
+		    get => _file.Position - TarHeader.BlockSize;
+		    set => _file.Position = value + TarHeader.BlockSize;
 	    }
 
 		protected override void Dispose(bool disposing)
 		{
-			int toSkip = (int) (TarHeader.BlockSize - _file.Length % TarHeader.BlockSize);
+			var toSkip = (int) (TarHeader.BlockSize - _file.Length % TarHeader.BlockSize);
 		    if (_file.CanSeek)
 		    {
 			    _file.Seek(toSkip, SeekOrigin.Current);
@@ -72,6 +70,16 @@ namespace dotnettar
 			    _file.ReadAsync(new byte[]{}, 0, toSkip);
 		    }
 		    base.Dispose(disposing);
+	    }
+
+	    public async Task WriteOnFileSystem(string path)
+	    {
+		    if (!Directory.Exists(path)) throw new ArgumentException("Source path doesn't exist");
+		    Directory.CreateDirectory(Path.GetDirectoryName(Header.Name));
+		    using (var fileStream = File.Create(Path.GetFileName(Header.Name)))
+		    {
+			    await _file.CopyToAsync(fileStream);
+		    }
 	    }
     }
 }

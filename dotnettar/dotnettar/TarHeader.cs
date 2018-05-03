@@ -10,7 +10,7 @@ namespace dotnettar
 	{
 		public const int BlockSize = 512;
 		//Pre-Ustar tar header					
-		string _name;
+		public string Name { get; private set; }
 		UnixPermission _fileMode;
 		byte _ownerId;
 		byte _groupId;
@@ -74,7 +74,7 @@ namespace dotnettar
 			if(Encoding.ASCII.GetString(uStar) != "ustar\0") throw new InvalidDataException("Invalid tar file, or non POSIX.1-1988 tar. Only POSIX.1-1988 tar or better are supported.");
 			var output = new TarHeader //TODO: implement try catch
 			{
-				_name = Encoding.ASCII.GetString(name).Replace("\0", string.Empty),
+				Name = Encoding.ASCII.GetString(name).Replace("\0", string.Empty),
 				_fileMode = new UnixPermission(Encoding.ASCII.GetString(fileMode)),
 				_ownerId = OctalToDecimal(byte.Parse(Encoding.ASCII.GetString(ownerId))),
 				_groupId = OctalToDecimal(byte.Parse(Encoding.ASCII.GetString(groupId))),
@@ -107,7 +107,7 @@ namespace dotnettar
 
 		public string ToString(bool checkSumWhiteSpace)
 		{
-			var name = _name.PadRight(100, '\0');
+			var name = Name.PadRight(100, '\0');
 			var permissions = _fileMode.ToString() + '\0';
 			var ownerId = Convert.ToString(_ownerId, 8).PadLeft(7, '0') + "\0";
 			var groupId = Convert.ToString(_groupId, 8).PadLeft(7, '0') + "\0";
