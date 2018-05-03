@@ -22,7 +22,7 @@ namespace dotnettar.Tests
 					{
 						var header = await TarHeader.FromStream(stream);
 						await header.WriteToStream(newFile);
-						for (int i = 0 ; i <= stream.Length-512; i+=1)
+						for (var i = 0 ; i <= stream.Length-512; i+=1)
 						{
 							var buffer = new byte[1];
 							await stream.ReadAsync(buffer, 0, 1);
@@ -50,12 +50,27 @@ namespace dotnettar.Tests
 					Assert.AreEqual(bufferDone, bufferOriginal);
 				}
 			}
-		} 
+		}
+
+		[Test]
+		public void AdvancedTarReading()
+		{
+			Assert.DoesNotThrowAsync(async () =>
+			{
+				using (var tarTest = File.OpenRead("redis-4.0.9.tar"))
+				{
+					while (true)
+					{
+						var debug = await TarFile.FromTarStream(tarTest);
+					}
+				}
+			} );
+			
+		}
 
 		[Test]
 		public void Basic()
 		{
-
 			Assert.DoesNotThrowAsync(async () =>
 			{
 				using (var stream = File.OpenRead("test.tar"))
@@ -75,11 +90,6 @@ namespace dotnettar.Tests
 					await TarHeader.FromStream(stream);
 				}
 			});
-		}
-		[Test]
-		public void Permissions()
-		{
-			new UnixPermission();
 		}
 	}
 }
