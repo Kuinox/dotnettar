@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace dotnettar.Tests
 {
 	[TestFixture]
-	internal class BasicTest
+	class BasicTest
 	{
 		[Test]
 		public void HeaderDoesntThrowOnReadWrite()

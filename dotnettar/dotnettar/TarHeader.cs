@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -17,16 +18,18 @@ namespace dotnettar
 		byte _groupId;
 		public long FileSize { get; private set; }
 		DateTime _lastModification;
-		public int CheckSum { get; private set; }
+
+		public int CheckSum => Encoding.ASCII.GetBytes(ToString(true)).Sum(b => b);
+
 		char _typeFlag;
 		string _nameOfLinkedFile;
-		bool _uStar;
 		byte _uStarVersion;
 		string _ownerUserName;
 		string _ownerGroupName;
 		int _deviceMajorNumber;
 		int _deviceMinorNumber;
 		string _fileNamePrefix;
+		
 
 		TarHeader() { }
 		public static async Task<TarHeader> FromStream(Stream stream)
@@ -71,7 +74,9 @@ namespace dotnettar
 			if (await stream.ReadAsync(deviceMinorNumber, 0, deviceMinorNumber.Length) == 0) throw new EndOfStreamException("Invalid header");
 			if (await stream.ReadAsync(fileNamePrefix   , 0, fileNamePrefix.Length   ) == 0) throw new EndOfStreamException("Invalid header");
 			if (await stream.ReadAsync(filler           , 0, filler.Length           ) == 0) throw new EndOfStreamException("Invalid header");
-			var output = new TarHeader //TODO: How i do that cleanly ?
+			var checksum = OctalToDecimal(int.Parse(Encoding.ASCII.GetString(checkSum).Replace("\0", string.Empty)));
+			if(Encoding.ASCII.GetString(uStar) != "ustar\0") throw new InvalidDataException("Invalid tar file, or non POSIX.1-1988 tar. Only POSIX.1-1988 tar or better are supported.");
+			var output = new TarHeader //TODO: implement try catch
 			{
 				_name = Encoding.ASCII.GetString(name).Replace("\0", string.Empty),
 				_fileMode = new UnixPermission(Encoding.ASCII.GetString(fileMode)),
@@ -79,10 +84,8 @@ namespace dotnettar
 				_groupId = OctalToDecimal(byte.Parse(Encoding.ASCII.GetString(groupId))),
 				FileSize = OctalToDecimal(long.Parse(Encoding.ASCII.GetString(fileSize))),
 				_lastModification = UnixTimeStampToDateTime(long.Parse(Encoding.ASCII.GetString(lastModification))),
-				CheckSum = OctalToDecimal(int.Parse(Encoding.ASCII.GetString(checkSum).Replace("\0", string.Empty))),
 				_typeFlag = Encoding.ASCII.GetString(new[] {typeFlag})[0],
 				_nameOfLinkedFile = Encoding.ASCII.GetString(nameOfLinkedFile),
-				_uStar = Encoding.ASCII.GetString(uStar) == "uStar\0",
 				_uStarVersion = byte.Parse(Encoding.ASCII.GetString(uStarVersion)),
 				_fileNamePrefix = Encoding.ASCII.GetString(fileNamePrefix),
 				_ownerUserName = Encoding.ASCII.GetString(ownerUserName),
@@ -99,42 +102,50 @@ namespace dotnettar
 			return output;
 		}
 
+		public override string ToString()
+		{
+			return ToString(false);
+		}
+
+		public string ToString(bool checkSumWhiteSpace)
+		{
+			var name = _name.PadRight(100, '\0');
+			var permissions = _fileMode.ToString() + '\0';
+			var ownerId = Convert.ToString(_ownerId, 8).PadLeft(7, '0') + "\0";
+			var groupId = Convert.ToString(_groupId, 8).PadLeft(7, '0') + "\0";
+			var fileSize = Convert.ToString(FileSize, 8).PadLeft(11, '0') + "\0";
+			var timeStamp = Convert.ToString((long)_lastModification.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).PadLeft(11, '0') + "\0";
+			string checksum;
+			if (checkSumWhiteSpace)
+			{
+				checksum = "        ";
+			}
+			else
+			{
+				checksum = Convert.ToString(CheckSum, 8).PadLeft(7, '0').Substring(1, 6) + "\0 ";
+			}
+			var nameLinked = _nameOfLinkedFile.PadRight(100, '\0');
+			const string ustar = "ustar\0";
+			var ustarVersion = Convert.ToString(_uStarVersion, 8).PadLeft(2, '0');
+			var ownerName = _ownerUserName.PadRight(12, '\0');
+			var groupName = _ownerGroupName.PadRight(12, '\0');
+			var deviceMajor = _deviceMajorNumber != 0 ? Convert.ToString(_deviceMajorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
+			var deviceMinor = _deviceMinorNumber != 0 ? Convert.ToString(_deviceMinorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
+			var filePrefix = _fileNamePrefix.PadRight(155, '\0');
+			const string filler = "\0\0\0\0\0\0\0\0\0\0\0\0";
+			var output = name + permissions + ownerId + groupId + fileSize + timeStamp + checksum + _typeFlag + nameLinked + ustar + ustarVersion +
+			       ownerName + groupName + deviceMajor + deviceMinor + filePrefix + filler;
+			//if(output.Length != 512) throw new InvalidOperationException("Internal error: Incorrect output string computed.");
+			return output;
+		}
+
+		
+
 		public async Task WriteToStream(Stream stream)
 		{
 			if(!stream.CanWrite) throw new IOException("Cannot write to given stream");
-			var name = Encoding.ASCII.GetBytes(_name.PadRight(100, '\0'));
-			var permissions = Encoding.ASCII.GetBytes(_fileMode.ToString()+'\0');
-			var ownerId = Encoding.ASCII.GetBytes(Convert.ToString(_ownerId, 8).PadLeft(7, '0')+"\0");
-			var groupId = Encoding.ASCII.GetBytes(Convert.ToString(_groupId, 8).PadLeft(7, '0')+"\0");
-			var fileSize = Encoding.ASCII.GetBytes(Convert.ToString(FileSize, 8).PadLeft(11, '0')+"\0");
-			var timeStamp = Encoding.ASCII.GetBytes(Convert.ToString((long)_lastModification.Subtract(new DateTime(1970, 1, 1)).TotalSeconds, 8).PadLeft(11, '0')+"\0");
-			var checksum = Encoding.ASCII.GetBytes(Convert.ToString(CheckSum, 8).PadLeft(7, '0')+"\0");
-			var nameLinked = Encoding.ASCII.GetBytes(_nameOfLinkedFile.PadRight(100, '\0'));
-			var ustar = Encoding.ASCII.GetBytes("uStar\0");
-			var ustarVersion = Encoding.ASCII.GetBytes(Convert.ToString(_uStarVersion, 8).PadLeft(2, '0'));
-			var ownerName = Encoding.ASCII.GetBytes(_ownerUserName.PadRight(12, '\0'));
-			var groupName = Encoding.ASCII.GetBytes(_ownerGroupName.PadRight(12, '\0'));
-			var deviceMajor = Encoding.ASCII.GetBytes(Convert.ToString(_deviceMajorNumber, 8).PadLeft(7, '0') + "\0");
-			var deviceMinor = Encoding.ASCII.GetBytes(Convert.ToString(_deviceMajorNumber, 8).PadLeft(7, '0') + "\0");
-			var filePrefix = Encoding.ASCII.GetBytes(_fileNamePrefix.PadRight(155, '\0'));
-			var filler = Encoding.ASCII.GetBytes("\0\0\0\0\0\0\0\0\0\0\0\0");
-			await stream.WriteAsync(name, 0, name.Length);
-			await stream.WriteAsync(permissions, 0, permissions.Length);
-			await stream.WriteAsync(ownerId, 0, ownerId.Length);
-			await stream.WriteAsync(groupId, 0, groupId.Length);
-			await stream.WriteAsync(fileSize, 0, fileSize.Length);
-			await stream.WriteAsync(timeStamp, 0, timeStamp.Length);
-			await stream.WriteAsync(checksum, 0, checksum.Length);
-			await stream.WriteAsync(new[] {(byte) _typeFlag}, 0, 1);
-			await stream.WriteAsync(nameLinked, 0, nameLinked.Length);
-			await stream.WriteAsync(ustar, 0, ustar.Length);
-			await stream.WriteAsync(ustarVersion, 0, ustarVersion.Length);
-			await stream.WriteAsync(ownerName, 0, ownerName.Length);
-			await stream.WriteAsync(groupName, 0, groupName.Length);
-			await stream.WriteAsync(deviceMajor, 0, deviceMajor.Length);
-			await stream.WriteAsync(deviceMinor, 0, deviceMinor.Length);
-			await stream.WriteAsync(filePrefix, 0, filePrefix.Length);
-			await stream.WriteAsync(filler, 0, filler.Length);
+			var headerString = Encoding.ASCII.GetBytes(ToString());
+			await stream.WriteAsync(headerString, 0, headerString.Length);
 		}
 
 		static DateTime UnixTimeStampToDateTime(long unixTimeStamp)
