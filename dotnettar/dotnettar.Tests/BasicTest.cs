@@ -46,7 +46,7 @@ namespace dotnettar.Tests
 					var bufferDone = new byte[512];
 					await created.ReadAsync(bufferDone, 0, bufferDone.Length);
 					Trace.WriteLine(Encoding.ASCII.GetString(bufferOriginal).Replace('\0', '$'));
-					Trace.WriteLine(Encoding.ASCII.GetString(bufferOriginal).Replace('\0', '$'));
+					Trace.WriteLine(Encoding.ASCII.GetString(bufferDone).Replace('\0', '$'));
 					Assert.AreEqual(bufferDone, bufferOriginal);
 				}
 			}

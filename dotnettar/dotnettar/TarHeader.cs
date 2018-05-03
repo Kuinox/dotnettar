@@ -107,7 +107,7 @@ namespace dotnettar
 			var ownerId = Encoding.ASCII.GetBytes(Convert.ToString(_ownerId, 8).PadLeft(7, '0')+"\0");
 			var groupId = Encoding.ASCII.GetBytes(Convert.ToString(_groupId, 8).PadLeft(7, '0')+"\0");
 			var fileSize = Encoding.ASCII.GetBytes(Convert.ToString(FileSize, 8).PadLeft(11, '0')+"\0");
-			var timeStamp = Encoding.ASCII.GetBytes(Convert.ToString((int)DateTime.UtcNow.Subtract(new DateTime(1970, 1, 1)).TotalSeconds, 8).PadLeft(11, '0')+"\0");
+			var timeStamp = Encoding.ASCII.GetBytes(Convert.ToString((long)_lastModification.Subtract(new DateTime(1970, 1, 1)).TotalSeconds, 8).PadLeft(11, '0')+"\0");
 			var checksum = Encoding.ASCII.GetBytes(Convert.ToString(CheckSum, 8).PadLeft(7, '0')+"\0");
 			var nameLinked = Encoding.ASCII.GetBytes(_nameOfLinkedFile.PadRight(100, '\0'));
 			var ustar = Encoding.ASCII.GetBytes("uStar\0");
