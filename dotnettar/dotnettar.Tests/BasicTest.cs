@@ -57,27 +57,18 @@ namespace dotnettar.Tests
 		{
 			Assert.DoesNotThrowAsync(async () =>
 			{
-				using (var tarTest = File.OpenRead("redis-4.0.9.tar"))
+				using (var tarTest = File.OpenRead("redis-4.0.0.tar"))
 				{
 					while (true)
 					{
-						var debug = await TarFile.FromTarStream(tarTest);
+						using (var debug = await TarFile.FromTarStream(tarTest))
+						{
+							Trace.WriteLine(debug.Header.Name);
+						}
 					}
 				}
 			} );
 			
-		}
-
-		[Test]
-		public void Basic()
-		{
-			Assert.DoesNotThrowAsync(async () =>
-			{
-				using (var stream = File.OpenRead("test.tar"))
-				{
-					await Test.Open(stream);
-				}
-			});
 		}
 
 		[Test]

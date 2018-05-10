@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -29,74 +30,63 @@ namespace dotnettar
 		string _fileNamePrefix;
 
 		TarHeader() { }
-		public static async Task<TarHeader> FromStream(Stream stream)
+		public static async Task<TarHeader> FromStream(Stream stream, bool throwBadCkecksum = false)
 		{
-			//Pre-Ustar tar header						|offset	|size	|Description
-			var name =              new byte[100];//	|0		|100	|File name
-			var fileMode =          new byte[8];  //	|100	|8		|File mode
-			var ownerId =           new byte[8];  //	|108	|8		|Owner's numeric user ID
-			var groupId =           new byte[8];  //	|116	|8		|Group's numeric user ID
-			var fileSize =          new byte[12]; //	|124	|12		|File size in bytes (octal base)
-			var lastModification =  new byte[12]; //	|136	|12		|Last modification time in numeric Unix time format (octal)
-			var checkSum =          new byte[8];  //	|148	|8		|Checksum for header record
-			byte typeFlag;						  //	|156	|1		|Type flag
-			var nameOfLinkedFile =  new byte[100];//	|157	|100	|Name of linked file
-			//Ustar tar headers							|offset	|size	|Description
-			var uStar =             new byte[6];  //	|257	|6		|UStar indicator "ustar" then NUL
-			var uStarVersion =      new byte[2];  //	|263	|2		|UStar version "00"
-			var ownerUserName =     new byte[32]; //	|265	|32		|Owner user name
-			var ownerGroupName =    new byte[32]; //	|297	|32		|Owner group name
-			var deviceMajorNumber = new byte[8];  //	|329	|8		|Device major number
-			var deviceMinorNumber = new byte[8];  //	|337	|8		|Device minor number
-			var fileNamePrefix =    new byte[155];  //	|345	|8		|Filename prefix
-			var filler =            new byte[12];  //	|500	|12		|Filler up to 512
+			var headerBytes = new byte[512];
+			if (await stream.ReadAsync(headerBytes, 0, headerBytes.Length) == 0) throw new EndOfStreamException("Invalid header");
+			var headerString = Encoding.ASCII.GetString(headerBytes);
 
-			if (await stream.ReadAsync(name             , 0, name.Length             ) == 0) throw new EndOfStreamException("Invalid header");
-			if (await stream.ReadAsync(fileMode         , 0, fileMode.Length         ) == 0) throw new EndOfStreamException("Invalid header");
-			if (await stream.ReadAsync(ownerId          , 0, ownerId.Length          ) == 0) throw new EndOfStreamException("Invalid header");
-			if (await stream.ReadAsync(groupId          , 0, groupId.Length          ) == 0) throw new EndOfStreamException("Invalid header");
-			if (await stream.ReadAsync(fileSize         , 0, fileSize.Length         ) == 0) throw new EndOfStreamException("Invalid header");
-			if (await stream.ReadAsync(lastModification , 0, lastModification.Length ) == 0) throw new EndOfStreamException("Invalid header");
-			if (await stream.ReadAsync(checkSum         , 0, checkSum.Length         ) == 0) throw new EndOfStreamException("Invalid header");
-			int temp = stream.ReadByte();
-			if(temp==-1) throw new EndOfStreamException("Invalid Header");
-			typeFlag = (byte) temp;
-			if (await stream.ReadAsync(nameOfLinkedFile , 0, nameOfLinkedFile.Length ) == 0) throw new EndOfStreamException("Invalid header");
-			//ustar
-			if (await stream.ReadAsync(uStar            , 0, uStar.Length            ) == 0) throw new EndOfStreamException("Invalid header");
-			if (await stream.ReadAsync(uStarVersion     , 0, uStarVersion.Length     ) == 0) throw new EndOfStreamException("Invalid header");
-			if (await stream.ReadAsync(ownerUserName    , 0, ownerUserName.Length    ) == 0) throw new EndOfStreamException("Invalid header");
-			if (await stream.ReadAsync(ownerGroupName   , 0, ownerGroupName.Length   ) == 0) throw new EndOfStreamException("Invalid header");
-			if (await stream.ReadAsync(deviceMajorNumber, 0, deviceMajorNumber.Length) == 0) throw new EndOfStreamException("Invalid header");
-			if (await stream.ReadAsync(deviceMinorNumber, 0, deviceMinorNumber.Length) == 0) throw new EndOfStreamException("Invalid header");
-			if (await stream.ReadAsync(fileNamePrefix   , 0, fileNamePrefix.Length   ) == 0) throw new EndOfStreamException("Invalid header");
-			if (await stream.ReadAsync(filler           , 0, filler.Length           ) == 0) throw new EndOfStreamException("Invalid header");
-			if(Encoding.ASCII.GetString(uStar) != "ustar\0") throw new InvalidDataException("Invalid tar file, or non POSIX.1-1988 tar. Only POSIX.1-1988 tar or better are supported.");
+			//Pre-Ustar tar header											|offset	|size	|Description
+			var name =              headerString.Substring(0, 100);		//	|0		|100	|File name
+			var fileMode =          headerString.Substring(100, 8);		//	|100	|8		|File mode
+			var ownerId =           headerString.Substring(108, 8);		//	|108	|8		|Owner's numeric user ID
+			var groupId =           headerString.Substring(116, 8);		//	|116	|8		|Group's numeric user ID
+			var fileSize =          headerString.Substring(124, 12);	//	|124	|12		|File size in bytes (octal base)
+			var lastModification =  headerString.Substring(136, 12);	//	|136	|12		|Last modification time in numeric Unix time format (octal)
+			var checkSum =          headerString.Substring(148, 8);		//	|148	|8		|Checksum for header record
+			var typeFlag =         headerString[156];					//	|156	|1		|Type flag
+			var nameOfLinkedFile =  headerString.Substring(157, 100);	//	|157	|100	|Name of linked file
+			//Ustar tar headers												|offset	|size	|Description
+			var uStar =             headerString.Substring(257, 6);		//	|257	|6		|UStar indicator "ustar" then NUL
+			var uStarVersion =      headerString.Substring(263, 2);		//	|263	|2		|UStar version "00"
+			var ownerUserName =     headerString.Substring(265, 32);	//	|265	|32		|Owner user name
+			var ownerGroupName =    headerString.Substring(297, 32);	//	|297	|32		|Owner group name
+			var deviceMajorNumber = headerString.Substring(329, 8);		//	|329	|8		|Device major number
+			var deviceMinorNumber = headerString.Substring(337, 8);		//	|337	|8		|Device minor number
+			var fileNamePrefix =    headerString.Substring(345, 155);	//	|345	|8		|Filename prefix
+			var filler =            headerString.Substring(500, 12);    //	|500	|12		|Filler up to 512
+
+
+			if (uStar != "ustar\0") throw new InvalidDataException("Invalid tar file, or non POSIX.1-1988 tar. Only POSIX.1-1988 tar or better are supported.");
 			var output = new TarHeader //TODO: implement try catch
 			{
-				Name = Encoding.ASCII.GetString(name).Replace("\0", string.Empty),
-				_fileMode = new UnixPermission(Encoding.ASCII.GetString(fileMode)),
-				_ownerId = OctalToDecimal(byte.Parse(Encoding.ASCII.GetString(ownerId))),
-				_groupId = OctalToDecimal(byte.Parse(Encoding.ASCII.GetString(groupId))),
-				FileSize = OctalToDecimal(long.Parse(Encoding.ASCII.GetString(fileSize))),
-				_lastModification = UnixTimeStampToDateTime(long.Parse(Encoding.ASCII.GetString(lastModification))),
-				_typeFlag = Encoding.ASCII.GetString(new[] {typeFlag})[0],
-				_nameOfLinkedFile = Encoding.ASCII.GetString(nameOfLinkedFile),
-				_uStarVersion = byte.Parse(Encoding.ASCII.GetString(uStarVersion)),
-				_fileNamePrefix = Encoding.ASCII.GetString(fileNamePrefix),
-				_ownerUserName = Encoding.ASCII.GetString(ownerUserName),
-				_ownerGroupName = Encoding.ASCII.GetString(ownerGroupName)
+				Name = name.Replace("\0", string.Empty),
+				_fileMode = new UnixPermission(fileMode),
+				_ownerId = OctalToDecimal(byte.Parse(ownerId)),
+				_groupId = OctalToDecimal(byte.Parse(groupId)),
+				FileSize = OctalToDecimal(long.Parse(fileSize)),
+				_lastModification = UnixTimeStampToDateTime(long.Parse(lastModification)),
+				_typeFlag = new[] {typeFlag}[0],
+				_nameOfLinkedFile = nameOfLinkedFile.Replace("\0", string.Empty),
+				_uStarVersion = byte.Parse(uStarVersion),
+				_fileNamePrefix = fileNamePrefix.Replace("\0", string.Empty),
+				_ownerUserName = ownerUserName.Replace("\0", string.Empty),
+				_ownerGroupName = ownerGroupName.Replace("\0", string.Empty)
 			};
-			if (!int.TryParse(Encoding.ASCII.GetString(deviceMajorNumber), out output._deviceMajorNumber))
+			if (!int.TryParse(deviceMajorNumber, out output._deviceMajorNumber))
 			{
 				output._deviceMajorNumber = 0;
 			}
-			if (!int.TryParse(Encoding.ASCII.GetString(deviceMinorNumber), out output._deviceMinorNumber))
+			if (!int.TryParse(deviceMinorNumber, out output._deviceMinorNumber))
 			{
 				output._deviceMinorNumber = 0;
 			}
-			var checksum = OctalToDecimal(int.Parse(Encoding.ASCII.GetString(checkSum).Replace("\0", string.Empty)));
-			if (output.CheckSum != checksum) throw new InvalidDataException("Invalid header's checksum.");
+			var checksum = OctalToDecimal(int.Parse(checkSum.Replace("\0", string.Empty)));
+			if (output.CheckSum != checksum)
+			{
+				if(throwBadCkecksum) throw new InvalidDataException("Invalid header's checksum.");
+				Trace.WriteLine("Warning, bad checksum");
+			}
 			return output;
 		}
 
