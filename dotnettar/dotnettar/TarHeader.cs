@@ -81,12 +81,12 @@ namespace dotnettar
 			{
 				output._deviceMinorNumber = 0;
 			}
-			var checksum = OctalToDecimal(int.Parse(checkSum.Replace("\0", string.Empty)));
-			if (output.CheckSum != checksum)
-			{
-				if(throwBadCkecksum) throw new InvalidDataException("Invalid header's checksum.");
-				Trace.WriteLine("Warning, bad checksum");
-			}
+			int checksum = OctalToDecimal(int.Parse(checkSum.Replace("\0", string.Empty)));
+
+			if (output.CheckSum == checksum) return output;
+
+			if (throwBadCkecksum) throw new InvalidDataException("Invalid header's checksum.");
+			Trace.WriteLine("Warning, bad checksum");
 			return output;
 		}
 

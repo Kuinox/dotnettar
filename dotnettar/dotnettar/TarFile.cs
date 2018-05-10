@@ -14,7 +14,7 @@ namespace dotnettar
 	    public TarHeader Header { get; private set; }
 
 
-	    TarFile() { }
+	    TarFile() {}
 	    public static async Task<TarFile> FromTarStream(Stream stream)
 	    {
 		    var output = new TarFile
@@ -40,7 +40,8 @@ namespace dotnettar
 
 	    public override int Read(byte[] buffer, int offset, int count)
 	    {
-		    return _file.Read(buffer, offset, count);
+		    Position += count;
+			return _file.Read(buffer, offset, count);
 	    }
 
 	    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
@@ -53,21 +54,19 @@ namespace dotnettar
 	    public override bool CanSeek => false;
 	    public override bool CanWrite => false;
 	    public override long Length => Header.FileSize;
-	    public override long Position {
-		    get => _file.Position - TarHeader.BlockSize;
-		    set => _file.Position = value + TarHeader.BlockSize;
-	    }
+	    public override long Position { get; set; }
 
-		protected override void Dispose(bool disposing)
+	    protected override void Dispose(bool disposing)
 		{
-			var toSkip = (int) (TarHeader.BlockSize - _file.Length % TarHeader.BlockSize);
+			long realLength = (long)Math.Ceiling((double)Length / TarHeader.BlockSize)*TarHeader.BlockSize;
+			long toSkip = realLength - Position;
 		    if (_file.CanSeek)
 		    {
 			    _file.Seek(toSkip, SeekOrigin.Current);
 		    }
 		    else
 		    {
-			    _file.ReadAsync(new byte[]{}, 0, toSkip);
+			    _file.ReadAsync(new byte[]{}, 0, (int)toSkip);//TODO read multiple time if size is larger than long, if file size can be biger than 32 bits
 		    }
 		    base.Dispose(disposing);
 	    }
