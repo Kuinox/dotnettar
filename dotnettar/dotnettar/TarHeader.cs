@@ -33,7 +33,13 @@ namespace dotnettar
 		public static async Task<TarHeader> FromStream(Stream stream, bool throwBadCkecksum = false)
 		{
 			var headerBytes = new byte[512];
-			if (await stream.ReadAsync(headerBytes, 0, headerBytes.Length) == 0) throw new EndOfStreamException("Invalid header");
+			int numberOfBytesRead = await stream.ReadAsync(headerBytes, 0, headerBytes.Length);
+			while (headerBytes.All(b => b == 0) && numberOfBytesRead == 512)
+			{
+				numberOfBytesRead = await stream.ReadAsync(headerBytes, 0, headerBytes.Length);
+			}
+			if (numberOfBytesRead == 0) return null;
+			if (numberOfBytesRead < BlockSize) throw new EndOfStreamException("Invalid header");
 			var headerString = Encoding.ASCII.GetString(headerBytes);
 
 			//Pre-Ustar tar header											|offset	|size	|Description

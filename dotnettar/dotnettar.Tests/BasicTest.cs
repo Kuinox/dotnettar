@@ -1,7 +1,10 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -63,6 +66,7 @@ namespace dotnettar.Tests
 					{
 						using (var debug = await TarFile.FromTarStream(tarTest))
 						{
+							if (debug == null) break;
 							Trace.WriteLine(debug.Header.Name);
 						}
 					}
