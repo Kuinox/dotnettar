@@ -56,23 +56,30 @@ namespace dotnettar.Tests
 		}
 
 		[Test]
-		public void AdvancedTarReading()
+		public async Task TarFileRead()
 		{
-			Assert.DoesNotThrowAsync(async () =>
+			var paths = new List<string>();
+			using (var tarTest = File.OpenRead("redis-4.0.0.tar"))
 			{
-				using (var tarTest = File.OpenRead("redis-4.0.0.tar"))
+				while (true)
 				{
-					while (true)
+					using (var debug = await TarFile.FromTarStream(tarTest))
 					{
-						using (var debug = await TarFile.FromTarStream(tarTest))
-						{
-							if (debug == null) break;
-							Trace.WriteLine(debug.Header.Name);
-						}
+						if (debug == null) break;
+						paths.Add(debug.Header.Name);
 					}
 				}
-			} );
-			
+			}
+
+			var correctPaths = (await File.ReadAllLinesAsync("redis-4.0.0_content.txt")).ToList();
+			Assert.That(paths.All(s => correctPaths.Remove(s)) && correctPaths.Count == 0);
+		}
+
+		[Test]
+		public async Task GenerateCheatSheet()
+		{
+			var dirs = Directory.EnumerateDirectories(@".\redis-4.0.0", "*");
+			var wholedirs = dirs.ToList();
 		}
 
 		[Test]

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Library</OutputType>
@@ -9,11 +9,18 @@
 
   <ItemGroup>
     <None Remove="redis-4.0.0.tar" />
+    <None Remove="redis-4.0.0_content.txt" />
     <None Remove="test.tar" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="redis-4.0.0/*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="redis-4.0.0.tar">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="redis-4.0.0_content.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="test.tar">

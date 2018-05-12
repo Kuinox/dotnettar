@@ -28,12 +28,14 @@ namespace dotnettar
 		int _deviceMajorNumber;
 		int _deviceMinorNumber;
 		string _fileNamePrefix;
+		string _filler;
 
 		TarHeader() { }
-		public static async Task<TarHeader> FromStream(Stream stream, bool throwBadCkecksum = false)
+		public static async Task<TarHeader> FromStream(Stream stream, bool throwBadCkecksum = true)
 		{
 			var headerBytes = new byte[512];
 			int numberOfBytesRead = await stream.ReadAsync(headerBytes, 0, headerBytes.Length);
+			
 			while (headerBytes.All(b => b == 0) && numberOfBytesRead == 512)
 			{
 				numberOfBytesRead = await stream.ReadAsync(headerBytes, 0, headerBytes.Length);
@@ -41,7 +43,7 @@ namespace dotnettar
 			if (numberOfBytesRead == 0) return null;
 			if (numberOfBytesRead < BlockSize) throw new EndOfStreamException("Invalid header");
 			var headerString = Encoding.ASCII.GetString(headerBytes);
-
+			Trace.WriteLine("original:"+headerString.Replace('\0', '$'));
 			//Pre-Ustar tar header											|offset	|size	|Description
 			var name =              headerString.Substring(0, 100);		//	|0		|100	|File name
 			var fileMode =          headerString.Substring(100, 8);		//	|100	|8		|File mode
@@ -77,7 +79,8 @@ namespace dotnettar
 				_uStarVersion = byte.Parse(uStarVersion),
 				_fileNamePrefix = fileNamePrefix.Replace("\0", string.Empty),
 				_ownerUserName = ownerUserName.Replace("\0", string.Empty),
-				_ownerGroupName = ownerGroupName.Replace("\0", string.Empty)
+				_ownerGroupName = ownerGroupName.Replace("\0", string.Empty),
+				_filler = filler
 			};
 			if (!int.TryParse(deviceMajorNumber, out output._deviceMajorNumber))
 			{
@@ -121,15 +124,15 @@ namespace dotnettar
 			var nameLinked = _nameOfLinkedFile.PadRight(100, '\0');
 			const string ustar = "ustar\0";
 			var ustarVersion = Convert.ToString(_uStarVersion, 8).PadLeft(2, '0');
-			var ownerName = _ownerUserName.PadRight(12, '\0');
-			var groupName = _ownerGroupName.PadRight(12, '\0');
-			var deviceMajor = _deviceMajorNumber != 0 ? Convert.ToString(_deviceMajorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
-			var deviceMinor = _deviceMinorNumber != 0 ? Convert.ToString(_deviceMinorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
+			var ownerName = _ownerUserName.PadRight(32, '\0');
+			var groupName = _ownerGroupName.PadRight(32, '\0');
+			var deviceMajor =  Convert.ToString(_deviceMajorNumber, 8).PadLeft(7, '0') + "\0";
+			var deviceMinor =  Convert.ToString(_deviceMinorNumber, 8).PadLeft(7, '0') + "\0";
 			var filePrefix = _fileNamePrefix.PadRight(155, '\0');
-			const string filler = "\0\0\0\0\0\0\0\0\0\0\0\0";
 			var output = name + permissions + ownerId + groupId + fileSize + timeStamp + checksum + _typeFlag + nameLinked + ustar + ustarVersion +
-			       ownerName + groupName + deviceMajor + deviceMinor + filePrefix + filler;
+			       ownerName + groupName + deviceMajor + deviceMinor + filePrefix + _filler;
 			//if(output.Length != 512) throw new InvalidOperationException("Internal error: Incorrect output string computed.");
+			Trace.WriteLine("convert :" + output.Replace('\0', '$'));
 			return output;
 		}
 
