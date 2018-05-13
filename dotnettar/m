@@ -1,0 +1,5 @@
+977d52d97eaa2d112908426dd052995d  obj/dotnettar.Tests.csproj.nuget.cache
+8bf300d991cf17aa480550ad8c7ecc21  obj/dotnettar.Tests.csproj.nuget.g.props
+5faddd5d08bbb0f0086900de08f51723  obj/dotnettar.Tests.csproj.nuget.g.targets
+50fd288fff34c41b13af0ef2f4fb8a41  obj/project.assets.json
+95df0377f06105874bb751fe842baf94  redis-4.0.0/pax_global_header

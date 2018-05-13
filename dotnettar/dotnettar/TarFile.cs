@@ -43,6 +43,7 @@ namespace dotnettar
 	    public override int Read(byte[] buffer, int offset, int count)
 	    {
 		    Position += count;
+		   // if (Position > Length) throw new EndOfStreamException();
 			return _file.Read(buffer, offset, count);
 	    }
 

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -24,7 +25,7 @@ namespace dotnettar.Tests
 					using (var newFile = File.Create("testDone.tar"))
 					{
 						var header = await TarHeader.FromStream(stream);
-						await header.WriteToStream(newFile);
+						await header.WriteToStream(newFile, true);
 						for (var i = 0 ; i <= stream.Length-512; i+=1)
 						{
 							var buffer = new byte[1];
@@ -67,19 +68,15 @@ namespace dotnettar.Tests
 					{
 						if (debug == null) break;
 						paths.Add(debug.Header.Name);
+						var hasher = MD5.Create();
+						hasher.Initialize();
+						var hash = hasher.ComputeHash(debug);
+						Trace.WriteLine(BitConverter.ToString(hash));
 					}
 				}
 			}
-
 			var correctPaths = (await File.ReadAllLinesAsync("redis-4.0.0_content.txt")).ToList();
 			Assert.That(paths.All(s => correctPaths.Remove(s)) && correctPaths.Count == 0);
-		}
-
-		[Test]
-		public async Task GenerateCheatSheet()
-		{
-			var dirs = Directory.EnumerateDirectories(@".\redis-4.0.0", "*");
-			var wholedirs = dirs.ToList();
 		}
 
 		[Test]

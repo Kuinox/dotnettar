@@ -6,7 +6,7 @@ namespace dotnettar
 {
     public class UnixPermission
     {
-	    ushort _permissions;
+	    readonly ushort _permissions;
 
 	    public UnixPermission(string permissionString = "0100777")
 	    {

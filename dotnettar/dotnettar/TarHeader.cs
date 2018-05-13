@@ -18,8 +18,7 @@ namespace dotnettar
 		public long FileSize { get; private set; }
 		DateTime _lastModification;
 
-		public int CheckSum => Encoding.ASCII.GetBytes(ToString(true)).Sum(b => b);
-
+		public int CheckSum(bool sevenZip = false) => Encoding.ASCII.GetBytes(ToString(true, sevenZip)).Sum(b => b);
 		char _typeFlag;
 		string _nameOfLinkedFile;
 		byte _uStarVersion;
@@ -43,7 +42,6 @@ namespace dotnettar
 			if (numberOfBytesRead == 0) return null;
 			if (numberOfBytesRead < BlockSize) throw new EndOfStreamException("Invalid header");
 			var headerString = Encoding.ASCII.GetString(headerBytes);
-			Trace.WriteLine("original:"+headerString.Replace('\0', '$'));
 			//Pre-Ustar tar header											|offset	|size	|Description
 			var name =              headerString.Substring(0, 100);		//	|0		|100	|File name
 			var fileMode =          headerString.Substring(100, 8);		//	|100	|8		|File mode
@@ -52,7 +50,7 @@ namespace dotnettar
 			var fileSize =          headerString.Substring(124, 12);	//	|124	|12		|File size in bytes (octal base)
 			var lastModification =  headerString.Substring(136, 12);	//	|136	|12		|Last modification time in numeric Unix time format (octal)
 			var checkSum =          headerString.Substring(148, 8);		//	|148	|8		|Checksum for header record
-			var typeFlag =         headerString[156];					//	|156	|1		|Type flag
+			var typeFlag =          headerString[156];					//	|156	|1		|Type flag
 			var nameOfLinkedFile =  headerString.Substring(157, 100);	//	|157	|100	|Name of linked file
 			//Ustar tar headers												|offset	|size	|Description
 			var uStar =             headerString.Substring(257, 6);		//	|257	|6		|UStar indicator "ustar" then NUL
@@ -92,10 +90,9 @@ namespace dotnettar
 			}
 			int checksum = OctalToDecimal(int.Parse(checkSum.Replace("\0", string.Empty)));
 
-			if (output.CheckSum == checksum) return output;
-
+			if (output.CheckSum() == checksum) return output;
+			if (output.CheckSum(true) == checksum) return output;
 			if (throwBadCkecksum) throw new InvalidDataException("Invalid header's checksum.");
-			Trace.WriteLine("Warning, bad checksum");
 			return output;
 		}
 
@@ -104,7 +101,7 @@ namespace dotnettar
 			return ToString(false);
 		}
 
-		public string ToString(bool checkSumWhiteSpace)
+		public string ToString(bool checkSumWhiteSpace, bool sevenZipMode = false)
 		{
 			var name = Name.PadRight(100, '\0');
 			var permissions = _fileMode.ToString() + '\0';
@@ -119,29 +116,30 @@ namespace dotnettar
 			}
 			else
 			{
-				checksum = Convert.ToString(CheckSum, 8).PadLeft(7, '0').Substring(1, 6) + "\0 ";
+				checksum = Convert.ToString(CheckSum(sevenZipMode), 8).PadLeft(7, '0').Substring(1, 6) + "\0 ";
 			}
 			var nameLinked = _nameOfLinkedFile.PadRight(100, '\0');
 			const string ustar = "ustar\0";
 			var ustarVersion = Convert.ToString(_uStarVersion, 8).PadLeft(2, '0');
 			var ownerName = _ownerUserName.PadRight(32, '\0');
 			var groupName = _ownerGroupName.PadRight(32, '\0');
-			var deviceMajor =  Convert.ToString(_deviceMajorNumber, 8).PadLeft(7, '0') + "\0";
-			var deviceMinor =  Convert.ToString(_deviceMinorNumber, 8).PadLeft(7, '0') + "\0";
+			//var deviceMajor =  Convert.ToString(_deviceMajorNumber, 8).PadLeft(7, '0') + "\0";
+			//var deviceMinor =  Convert.ToString(_deviceMinorNumber, 8).PadLeft(7, '0') + "\0";
+			var deviceMajor = _deviceMajorNumber != 0 || !sevenZipMode ? Convert.ToString(_deviceMajorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
+			var deviceMinor = _deviceMinorNumber != 0 || !sevenZipMode ? Convert.ToString(_deviceMinorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
 			var filePrefix = _fileNamePrefix.PadRight(155, '\0');
 			var output = name + permissions + ownerId + groupId + fileSize + timeStamp + checksum + _typeFlag + nameLinked + ustar + ustarVersion +
 			       ownerName + groupName + deviceMajor + deviceMinor + filePrefix + _filler;
-			//if(output.Length != 512) throw new InvalidOperationException("Internal error: Incorrect output string computed.");
-			Trace.WriteLine("convert :" + output.Replace('\0', '$'));
+			if(output.Length != 512) throw new InvalidOperationException("Internal error: Incorrect output string computed.");
 			return output;
 		}
 
 		
 
-		public async Task WriteToStream(Stream stream)
+		public async Task WriteToStream(Stream stream, bool sevenZipMode = false)
 		{
 			if(!stream.CanWrite) throw new IOException("Cannot write to given stream");
-			var headerString = Encoding.ASCII.GetBytes(ToString());
+			var headerString = Encoding.ASCII.GetBytes(ToString(false, sevenZipMode));
 			await stream.WriteAsync(headerString, 0, headerString.Length);
 		}
 
