@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotnettar", "dotnettar\dotn
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "dotnettar.Tests", "dotnettar.Tests\dotnettar.Tests.csproj", "{91F75E6F-21A9-411E-8467-A627196511EA}"
 EndProject
-Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{F10C9D9E-E6E9-442D-BF8C-A26C92A3CBB4}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{91F75E6F-21A9-411E-8467-A627196511EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{91F75E6F-21A9-411E-8467-A627196511EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{91F75E6F-21A9-411E-8467-A627196511EA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F10C9D9E-E6E9-442D-BF8C-A26C92A3CBB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F10C9D9E-E6E9-442D-BF8C-A26C92A3CBB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F10C9D9E-E6E9-442D-BF8C-A26C92A3CBB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F10C9D9E-E6E9-442D-BF8C-A26C92A3CBB4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

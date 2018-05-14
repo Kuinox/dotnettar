@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -60,18 +58,18 @@ namespace dotnettar.Tests
 		public async Task TarFileRead()
 		{
 			var paths = new List<string>();
-			using (var tarTest = File.OpenRead("redis-4.0.0.tar"))
+			using (var tarTest = new TarBall(File.OpenRead("redis-4.0.0.tar")))
 			{
 				while (true)
 				{
-					using (var debug = await TarFile.FromTarStream(tarTest))
+					using (var debug = await tarTest.GetNextTarFile())
 					{
 						if (debug == null) break;
 						paths.Add(debug.Header.Name);
 						var hasher = MD5.Create();
-						hasher.Initialize();
-						var hash = hasher.ComputeHash(debug);
-						Trace.WriteLine(BitConverter.ToString(hash));
+						//hasher.Initialize();
+						//var hash = hasher.ComputeHash(debug);
+						//Trace.WriteLine(BitConverter.ToString(hash));
 					}
 				}
 			}

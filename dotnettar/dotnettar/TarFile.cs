@@ -15,7 +15,7 @@ namespace dotnettar
 
 
 	    TarFile() {}
-	    public static async Task<TarFile> FromTarStream(Stream stream)
+	    internal static async Task<TarFile> FromTarStream(Stream stream)
 	    {
 			var header = await TarHeader.FromStream(stream);
 		    if (header == null) return null;
