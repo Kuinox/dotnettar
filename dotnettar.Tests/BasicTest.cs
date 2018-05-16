@@ -67,12 +67,30 @@ namespace dotnettar.Tests
 						if (debug == null) break;
 						paths.Add(debug.Header.Name);
 						var hasher = MD5.Create();
-						//hasher.Initialize();
-						//var hash = hasher.ComputeHash(debug);
-						//Trace.WriteLine(BitConverter.ToString(hash));
+						hasher.Initialize();
+						var data = new byte[debug.Length];
+						await debug.ReadAsync(data, 0, data.Length);
+						var hash = hasher.ComputeHash(data);
+						
+						using (var fileTest = File.OpenRead("redis-4.0.0/pax_global_header"))
+						{
+							var hasherCorrect = MD5.Create();
+							hasherCorrect.Initialize();
+							var dataCorrect = new byte[fileTest.Length];
+							await fileTest.ReadAsync(dataCorrect, 0, dataCorrect.Length);
+							var hashCorrect = hasherCorrect.ComputeHash(dataCorrect);
+							Trace.WriteLine("Hash of byte array of");
+							Trace.WriteLine("converted file: "+BitConverter.ToString(hash));
+							Trace.WriteLine("original file:  "+BitConverter.ToString(hashCorrect));
+							Trace.WriteLine("converted in ASCII: "+Encoding.ASCII.GetString(data));
+							Trace.WriteLine("original in ASCII:  " +Encoding.ASCII.GetString(dataCorrect));
+							Trace.WriteLine("Sequence equal:"+ data.SequenceEqual(dataCorrect));
+						}
 					}
 				}
 			}
+
+			
 			var correctPaths = (await File.ReadAllLinesAsync("redis-4.0.0_content.txt")).ToList();
 			Assert.That(paths.All(s => correctPaths.Remove(s)) && correctPaths.Count == 0);
 		}
