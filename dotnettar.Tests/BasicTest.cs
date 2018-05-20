@@ -44,18 +44,12 @@ namespace dotnettar.Tests
 					if (line.Contains(" ")) hashList.Add(line.Substring(34), line.Substring(0, 32));
 					else hashList.Add(line, "");
 				}
-
-
 				using (var tarTest = new TarBall(File.OpenRead("redis-4.0.0.tar")))
 				{
 					while (true)
 					{
 						using (var nextFile = await tarTest.GetNextTarFile())
 						{
-							if (hashList.Count == 566)
-							{
-
-							}
 							if (nextFile == null) break;
 							Assert.That(hashList.ContainsKey(nextFile.Header.Name));
 							if (nextFile.Header.FileSize > 0)
@@ -63,7 +57,6 @@ namespace dotnettar.Tests
 								var hasher = MD5.Create();
 								hasher.Initialize();
 								var hash = BitConverter.ToString(hasher.ComputeHash(nextFile)).Replace("-", "").ToLower();
-								Trace.WriteLine(hash);
 								Assert.That(hashList[nextFile.Header.Name] == hash);
 							}
 							Assert.That(hashList.Remove(nextFile.Header.Name));
