@@ -30,7 +30,7 @@ namespace dotnettar
 		string _filler;
 
 		TarHeader() { }
-		public static async Task<TarHeader> FromStream(Stream stream, bool throwBadCkecksum = true)
+		internal static async Task<TarHeader> FromStream(Stream stream, bool throwBadCkecksum = true)
 		{
 			var headerBytes = new byte[512];
 			int numberOfBytesRead = await stream.ReadAsync(headerBytes, 0, headerBytes.Length);
