@@ -24,7 +24,7 @@ namespace dotnettar.Tests
 					{
 						var header = await TarHeader.FromStream(stream);
 						await header.WriteToStream(newFile, true);
-						for (var i = 0 ; i <= stream.Length-512; i+=1)
+						for (var i = 0; i <= stream.Length - 512; i += 1)
 						{
 							var buffer = new byte[1];
 							await stream.ReadAsync(buffer, 0, 1);
@@ -55,56 +55,61 @@ namespace dotnettar.Tests
 		}
 
 		[Test]
-		public async Task TarFileRead()
+		public async Task TarFileHashMatch()
 		{
-			var paths = new List<string>();
-			using (var tarTest = new TarBall(File.OpenRead("redis-4.0.0.tar")))
+			using (var hashFile = File.OpenText("redis-4.0.0_content.txt"))
 			{
-				while (true)
+				var hashList = new Dictionary<string, string>();
+				while (!hashFile.EndOfStream)
 				{
-					using (var debug = await tarTest.GetNextTarFile())
+					var line = await hashFile.ReadLineAsync();
+					if (line.Contains(" ")) hashList.Add(line.Substring(34), line.Substring(0, 32));
+					else hashList.Add(line, "");
+				}
+
+
+				using (var tarTest = new TarBall(File.OpenRead("redis-4.0.0.tar")))
+				{
+					while (true)
 					{
-						if (debug == null) break;
-						paths.Add(debug.Header.Name);
-						var hasher = MD5.Create();
-						hasher.Initialize();
-						var data = new byte[debug.Length];
-						await debug.ReadAsync(data, 0, data.Length);
-						var hash = hasher.ComputeHash(data);
-						
-						using (var fileTest = File.OpenRead("redis-4.0.0/pax_global_header"))
+						using (var nextFile = await tarTest.GetNextTarFile())
 						{
-							var hasherCorrect = MD5.Create();
-							hasherCorrect.Initialize();
-							var dataCorrect = new byte[fileTest.Length];
-							await fileTest.ReadAsync(dataCorrect, 0, dataCorrect.Length);
-							var hashCorrect = hasherCorrect.ComputeHash(dataCorrect);
-							Trace.WriteLine("Hash of byte array of");
-							Trace.WriteLine("converted file: "+BitConverter.ToString(hash));
-							Trace.WriteLine("original file:  "+BitConverter.ToString(hashCorrect));
-							Trace.WriteLine("converted in ASCII: "+Encoding.ASCII.GetString(data));
-							Trace.WriteLine("original in ASCII:  " +Encoding.ASCII.GetString(dataCorrect));
-							Trace.WriteLine("Sequence equal:"+ data.SequenceEqual(dataCorrect));
+							if (hashList.Count == 566)
+							{
+
+							}
+							if (nextFile == null) break;
+							Assert.That(hashList.ContainsKey(nextFile.Header.Name));
+							if (nextFile.Header.FileSize > 0)
+							{
+								var hasher = MD5.Create();
+								hasher.Initialize();
+								var hash = BitConverter.ToString(hasher.ComputeHash(nextFile)).Replace("-","").ToLower();
+								Trace.WriteLine(hash);
+								Assert.That(hashList[nextFile.Header.Name] == hash);
+							}
+							Assert.That(hashList.Remove(nextFile.Header.Name));
 						}
 					}
+					Assert.That(hashList.Count == 0);
 				}
 			}
-
-			
-			var correctPaths = (await File.ReadAllLinesAsync("redis-4.0.0_content.txt")).ToList();
-			Assert.That(paths.All(s => correctPaths.Remove(s)) && correctPaths.Count == 0);
 		}
 
-		[Test]
-		public void Advanced()
+
+
+		
+
+	[Test]
+	public void Advanced()
+	{
+		Assert.DoesNotThrowAsync(async () =>
 		{
-			Assert.DoesNotThrowAsync(async () =>
+			using (var stream = File.OpenRead("test.tar"))
 			{
-				using (var stream = File.OpenRead("test.tar"))
-				{
-					await TarHeader.FromStream(stream);
-				}
-			});
-		}
+				await TarHeader.FromStream(stream);
+			}
+		});
 	}
+}
 }

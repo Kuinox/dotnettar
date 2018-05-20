@@ -42,9 +42,15 @@ namespace dotnettar
 
 	    public override int Read(byte[] buffer, int offset, int count)
 	    {
-		    Position += count;
-		   // if (Position > Length) throw new EndOfStreamException();
-			return _file.Read(buffer, offset, count);
+		    int toRead = count;
+		    if (count > Length - Position)
+		    {
+			    toRead = (int) (Length - Position);
+		    }
+		    Position += toRead;
+		    var returnedByteRead = _file.Read(buffer, offset, toRead);
+			if (returnedByteRead < toRead) throw new IOException("Unexpected End of stream");
+		    return toRead;
 	    }
 
 	    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
@@ -57,7 +63,12 @@ namespace dotnettar
 	    public override bool CanSeek => false;
 	    public override bool CanWrite => false;
 	    public override long Length => Header.FileSize;
-	    public override long Position { get; set; }
+
+	    public override long Position
+	    {
+		    get;
+		    set;
+	    }
 
 	    protected override void Dispose(bool disposing)
 		{
