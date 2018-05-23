@@ -42,15 +42,9 @@ namespace dotnettar
 
 	    public override int Read(byte[] buffer, int offset, int count)
 	    {
-		    int toRead = count;
-		    if (count > Length - Position)
-		    {
-			    toRead = (int) (Length - Position);
-		    }
-		    Position += toRead;
-		    var returnedByteRead = _file.Read(buffer, offset, toRead);
-			if (returnedByteRead < toRead) throw new IOException("Unexpected End of stream");
-		    return toRead;
+		    var returnedByteRead = _file.Read(buffer, offset, count);
+		    Position += returnedByteRead;
+		    return returnedByteRead;
 	    }
 
 	    public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
@@ -83,6 +77,11 @@ namespace dotnettar
 			    _file.ReadAsync(new byte[]{}, 0, (int)toSkip);//TODO read multiple time if size is larger than long, if file size can be biger than 32 bits
 		    }
 		    base.Dispose(disposing);
+	    }
+
+	    public async Task<byte[]> ReadByteAmount(Stream streamn, int amount)
+	    {
+		    var output = new byte[amount];
 	    }
 
 	    public async Task WriteOnFileSystem(string path)
