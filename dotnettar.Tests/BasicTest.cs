@@ -41,11 +41,11 @@ namespace dotnettar.Tests
 					if (line.Contains(" ")) hashList.Add(line.Substring(34), line.Substring(0, 32));
 					else hashList.Add(line, "");
 				}
-				using (var tarTest = new TarBall(File.OpenRead("redis-4.0.0.tar")))
+				using (var tarTest = new TarBallReader(File.OpenRead("redis-4.0.0.tar")))
 				{
 					while (true)
 					{
-						using (var nextFile = await tarTest.GetNextTarFile())
+						using (var nextFile = await tarTest.GetNextEntry())
 						{
 							if (nextFile == null) break;
 							Assert.That(hashList.ContainsKey(nextFile.Header.Name));

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
@@ -8,7 +8,7 @@
     <Product>dotnettar</Product>
     <Description>WIP Library to read or write Tar files.</Description>
     <PackageTags>tar</PackageTags>
-    <Version>1.0.3</Version>
+    <Version>1.0.5</Version>
   </PropertyGroup>
 
 </Project>

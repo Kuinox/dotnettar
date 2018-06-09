@@ -35,7 +35,7 @@ namespace dotnettar
 		/// The tar will be valid if you write only TarFile objects
 		/// </summary>
 		/// <returns></returns>
-		public async void AddToTar(Stream streamToWrite)
+		public async Task AddToTar(Stream streamToWrite)
 		{
 			await Header.WriteToStream(streamToWrite);
 			await _file.CopyToAsync(streamToWrite);

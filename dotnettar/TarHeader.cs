@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,11 +11,11 @@ namespace dotnettar
 	{
 		public const int BlockSize = 512;
 		//Pre-Ustar tar header					
-		public string Name { get; private set; }
+		public string Name { get; set; }
 		public UnixPermission FileMode;
 		public byte OwnerId;
 		public byte GroupId;
-		public long FileSize { get; private set; }
+		public long FileSize { get; set; }//TODO public set or not ?
 		public DateTime LastModification;
 
 		int CheckSum(bool sevenZip = false) => Encoding.ASCII.GetBytes(ToString(true, sevenZip)).Sum(b => b);
@@ -109,7 +110,14 @@ namespace dotnettar
 		public string ToString(bool checkSumWhiteSpace, bool sevenZipMode = false)
 		{
 			var name = Name.PadRight(100, '\0');
-			var permissions = FileMode.ToString() + '\0';
+			string permissions;
+			if(FileMode == null)
+			{
+				permissions = UnixPermission.DefaultPermission();
+			} else
+			{
+				permissions = FileMode.ToString() + '\0';
+			}
 			var ownerId = Convert.ToString(OwnerId, 8).PadLeft(7, '0') + "\0";
 			var groupId = Convert.ToString(GroupId, 8).PadLeft(7, '0') + "\0";
 			var fileSize = Convert.ToString(FileSize, 8).PadLeft(11, '0') + "\0";
@@ -123,18 +131,22 @@ namespace dotnettar
 			{
 				checksum = Convert.ToString(CheckSum(sevenZipMode), 8).PadLeft(7, '0').Substring(1, 6) + "\0 ";
 			}
-			var nameLinked = NameOfLinkedFile.PadRight(100, '\0');
+            if (NameOfLinkedFile == null) NameOfLinkedFile = "";
+            if (OwnerUserName == null) OwnerUserName = "";
+            if (OwnerGroupName == null) OwnerGroupName = "";
+            if (FileNamePrefix == null) FileNamePrefix = "";
+            var nameLinked = NameOfLinkedFile.PadRight(100, '\0');
 			const string ustar = "ustar\0";
 			var ustarVersion = Convert.ToString(UStarVersion, 8).PadLeft(2, '0');
-			var ownerName = OwnerUserName.PadRight(32, '\0');
+            var ownerName = OwnerUserName.PadRight(32, '\0'); 
 			var groupName = OwnerGroupName.PadRight(32, '\0');
 			//var deviceMajor =  Convert.ToString(_deviceMajorNumber, 8).PadLeft(7, '0') + "\0";
 			//var deviceMinor =  Convert.ToString(_deviceMinorNumber, 8).PadLeft(7, '0') + "\0";
 			var deviceMajor = DeviceMajorNumber != 0 || !sevenZipMode ? Convert.ToString(DeviceMajorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
 			var deviceMinor = DeviceMinorNumber != 0 || !sevenZipMode ? Convert.ToString(DeviceMinorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
 			var filePrefix = FileNamePrefix.PadRight(155, '\0');
-			var output = (name + permissions + ownerId + groupId + fileSize + timeStamp + checksum + TypeFlag + nameLinked + ustar + ustarVersion +
-			       ownerName + groupName + deviceMajor + deviceMinor + filePrefix).PadRight('\0');
+            var output = (name + permissions + ownerId + groupId + fileSize + timeStamp + checksum + TypeFlag + nameLinked + ustar + ustarVersion +
+			       ownerName + groupName + deviceMajor + deviceMinor + filePrefix).PadRight(512, '\0');
 			if(output.Length != 512) throw new InvalidOperationException("Internal error: Incorrect output string computed.");
 			return output;
 		}

@@ -19,5 +19,11 @@ namespace dotnettar
 		    string output = Convert.ToString(_permissions, 8);
 		    return output.PadLeft(7, '0');
 	    }
+
+		public static string DefaultPermission()
+		{
+			return "0100777";
+		}
+		
     }
 }
