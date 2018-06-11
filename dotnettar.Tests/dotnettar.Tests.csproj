@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="ITest.zip" />
     <None Remove="redis-4.0.0.tar" />
     <None Remove="redis-4.0.0_content.txt" />
     <None Remove="test.tar" />
@@ -15,6 +16,9 @@
 
   <ItemGroup>
     <Content Include="redis-4.0.0/*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="ITest.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="redis-4.0.0.tar">

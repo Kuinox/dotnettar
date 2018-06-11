@@ -63,5 +63,13 @@ namespace dotnettar.Tests
 				}
 			}
 		}
+        [Test]
+        public async Task MonoFile()
+        {
+            using (var writeFile = new FileStream("output.tar", FileMode.Create))
+            {
+                await new MonoTarBallStreamReader("ITest.zip").CopyToAsync(writeFile);
+            }
+        }
 	}
 }

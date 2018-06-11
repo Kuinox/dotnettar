@@ -10,15 +10,17 @@ namespace dotnettar
 	public class TarHeader
 	{
 		public const int BlockSize = 512;
-		//Pre-Ustar tar header					
-		public string Name { get; set; }
+        readonly bool _sevenZipMode;
+
+        //Pre-Ustar tar header					
+        public string Name { get; set; }
 		public UnixPermission FileMode;
 		public byte OwnerId;
 		public byte GroupId;
 		public long FileSize { get; set; }//TODO public set or not ?
 		public DateTime LastModification;
 
-		int CheckSum(bool sevenZip = false) => Encoding.ASCII.GetBytes(ToString(true, sevenZip)).Sum(b => b);
+		int CheckSum(bool sevenZip = false) => Encoding.ASCII.GetBytes(ToString(true)).Sum(b => b);
 		public char TypeFlag;
 		public string NameOfLinkedFile;
 		public byte UStarVersion;
@@ -28,7 +30,9 @@ namespace dotnettar
 		public int DeviceMinorNumber;
 		public string FileNamePrefix;
 
-		public TarHeader() { }
+		public TarHeader(bool sevenZipMode = false) {
+            _sevenZipMode = sevenZipMode;
+        }
 		internal static async Task<TarHeader> FromStream(Stream stream, bool throwBadCkecksum = true)
 		{
 			var headerBytes = new byte[512];
@@ -107,13 +111,13 @@ namespace dotnettar
 			return ToString(false);
 		}
 
-		public string ToString(bool checkSumWhiteSpace, bool sevenZipMode = false)
+		public string ToString(bool checkSumWhiteSpace)
 		{
 			var name = Name.PadRight(100, '\0');
 			string permissions;
 			if(FileMode == null)
 			{
-				permissions = UnixPermission.DefaultPermission();
+				permissions = UnixPermission.DefaultPermission()+"\0";
 			} else
 			{
 				permissions = FileMode.ToString() + '\0';
@@ -121,7 +125,8 @@ namespace dotnettar
 			var ownerId = Convert.ToString(OwnerId, 8).PadLeft(7, '0') + "\0";
 			var groupId = Convert.ToString(GroupId, 8).PadLeft(7, '0') + "\0";
 			var fileSize = Convert.ToString(FileSize, 8).PadLeft(11, '0') + "\0";
-			var timeStamp = Convert.ToString((long)LastModification.Subtract(new DateTime(1970, 1, 1)).TotalSeconds).PadLeft(11, '0') + "\0";
+            if (LastModification == DateTime.MinValue) LastModification = DateTime.Now;
+			var timeStamp = Convert.ToString((long)LastModification.Subtract(new DateTime(1970, 1, 1)).TotalSeconds, 8).PadLeft(11, '0') + "\0";
 			string checksum;
 			if (checkSumWhiteSpace)
 			{
@@ -129,7 +134,7 @@ namespace dotnettar
 			}
 			else
 			{
-				checksum = Convert.ToString(CheckSum(sevenZipMode), 8).PadLeft(7, '0').Substring(1, 6) + "\0 ";
+				checksum = Convert.ToString(CheckSum(_sevenZipMode), 8).PadLeft(7, '0').Substring(1, 6) + "\0 ";
 			}
             if (NameOfLinkedFile == null) NameOfLinkedFile = "";
             if (OwnerUserName == null) OwnerUserName = "";
@@ -142,21 +147,21 @@ namespace dotnettar
 			var groupName = OwnerGroupName.PadRight(32, '\0');
 			//var deviceMajor =  Convert.ToString(_deviceMajorNumber, 8).PadLeft(7, '0') + "\0";
 			//var deviceMinor =  Convert.ToString(_deviceMinorNumber, 8).PadLeft(7, '0') + "\0";
-			var deviceMajor = DeviceMajorNumber != 0 || !sevenZipMode ? Convert.ToString(DeviceMajorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
-			var deviceMinor = DeviceMinorNumber != 0 || !sevenZipMode ? Convert.ToString(DeviceMinorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
+			var deviceMajor = DeviceMajorNumber != 0 || !_sevenZipMode ? Convert.ToString(DeviceMajorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
+			var deviceMinor = DeviceMinorNumber != 0 || !_sevenZipMode ? Convert.ToString(DeviceMinorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
 			var filePrefix = FileNamePrefix.PadRight(155, '\0');
             var output = (name + permissions + ownerId + groupId + fileSize + timeStamp + checksum + TypeFlag + nameLinked + ustar + ustarVersion +
-			       ownerName + groupName + deviceMajor + deviceMinor + filePrefix).PadRight(512, '\0');
+			       ownerName + groupName + deviceMajor + deviceMinor + filePrefix+ "\0\0\0\0\0\0\0\0\0\0\0\0");
 			if(output.Length != 512) throw new InvalidOperationException("Internal error: Incorrect output string computed.");
 			return output;
 		}
 
 		
 
-		public async Task WriteToStream(Stream stream, bool sevenZipMode = false)
+		public async Task WriteToStream(Stream stream)
 		{
 			if(!stream.CanWrite) throw new IOException("Cannot write to given stream");
-			var headerString = Encoding.ASCII.GetBytes(ToString(false, sevenZipMode));
+			var headerString = Encoding.ASCII.GetBytes(ToString(false));
 			await stream.WriteAsync(headerString, 0, headerString.Length);
 		}
 
