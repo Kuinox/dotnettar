@@ -10,6 +10,8 @@ namespace dotnettar
 	public class TarHeader
 	{
 		public const int BlockSize = 512;
+        readonly bool _sevenZipMode;
+
         //Pre-Ustar tar header					
         public string Name { get; set; }
 		public UnixPermission FileMode;
@@ -18,7 +20,7 @@ namespace dotnettar
 		public long FileSize { get; set; }//TODO public set or not ?
 		public DateTime LastModification;
 
-		int CheckSum() => Encoding.ASCII.GetBytes(ToString(true)).Sum(b => b);
+		int CheckSum(bool sevenZip = false) => Encoding.ASCII.GetBytes(ToString(true)).Sum(b => b);
 		public char TypeFlag;
 		public string NameOfLinkedFile;
 		public byte UStarVersion;
@@ -28,7 +30,8 @@ namespace dotnettar
 		public int DeviceMinorNumber;
 		public string FileNamePrefix;
 
-		public TarHeader() {
+		public TarHeader(bool sevenZipMode = false) {
+            _sevenZipMode = sevenZipMode;
         }
 		internal static async Task<TarHeader> FromStream(Stream stream, bool throwBadCkecksum = true)
 		{
@@ -99,7 +102,7 @@ namespace dotnettar
 			return output;
 		}
 
-        public override string ToString()
+		public override string ToString()
 		{
 			return ToString(false);
 		}
@@ -127,7 +130,7 @@ namespace dotnettar
 			}
 			else
 			{
-				checksum = Convert.ToString(CheckSum(), 8).PadLeft(7, '0').Substring(1, 6) + "\0 ";
+				checksum = Convert.ToString(CheckSum(_sevenZipMode), 8).PadLeft(7, '0').Substring(1, 6) + "\0 ";
 			}
             if (NameOfLinkedFile == null) NameOfLinkedFile = "";
             if (OwnerUserName == null) OwnerUserName = "";
@@ -140,8 +143,8 @@ namespace dotnettar
 			var groupName = OwnerGroupName.PadRight(32, '\0');
 			//var deviceMajor =  Convert.ToString(_deviceMajorNumber, 8).PadLeft(7, '0') + "\0";
 			//var deviceMinor =  Convert.ToString(_deviceMinorNumber, 8).PadLeft(7, '0') + "\0";
-			var deviceMajor = DeviceMajorNumber != 0 ? Convert.ToString(DeviceMajorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
-			var deviceMinor = DeviceMinorNumber != 0 ? Convert.ToString(DeviceMinorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
+			var deviceMajor = DeviceMajorNumber != 0 || !_sevenZipMode ? Convert.ToString(DeviceMajorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
+			var deviceMinor = DeviceMinorNumber != 0 || !_sevenZipMode ? Convert.ToString(DeviceMinorNumber, 8).PadLeft(7, '0') + "\0" : "\0\0\0\0\0\0\0\0";
 			var filePrefix = FileNamePrefix.PadRight(155, '\0');
             var output = (name + permissions + ownerId + groupId + fileSize + timeStamp + checksum + TypeFlag + nameLinked + ustar + ustarVersion +
 			       ownerName + groupName + deviceMajor + deviceMinor + filePrefix+ "\0\0\0\0\0\0\0\0\0\0\0\0");

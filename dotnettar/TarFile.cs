@@ -1,96 +1,69 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
+using System.Text;
 
 namespace dotnettar
 {
-	/// <inheritdoc />
-	public class TarFile : Stream
-	{
+    class TarStream : Stream
+    {
+        public delegate TarFileStream NextFile();
 
-		Stream _file;
-		public TarHeader Header { get; private set; }
+        readonly NextFile _callback;
+        long _position;
+        long _startLastStream;
+        TarFileStream _actualStream;
+        public TarStream(NextFile callback)
+        {
+            _callback = callback;
+        }
 
+        public override bool CanRead => true;
 
-		TarFile() { }
+        public override bool CanSeek => false;
 
-		public TarFile(TarHeader header, Stream stream)
-		{
-			Header = header;
-		}
-		internal static async Task<TarFile> FromTarStream(Stream stream)
-		{
-			var header = await TarHeader.FromStream(stream);
-			if (header == null) return null;
-			var output = new TarFile
-			{
-				Header = header,
-				_file = stream
-			};
-			return output;
-		}
+        public override bool CanWrite => false;
 
-		/// <summary>
-		/// Write the content of a TarFile to a Stream
-		/// The tar will be valid if you write only TarFile objects
-		/// </summary>
-		/// <returns></returns>
-		public async Task AddToTar(Stream streamToWrite)
-		{
-			await Header.WriteToStream(streamToWrite);
-			await _file.CopyToAsync(streamToWrite);
-		}
+        public override long Length => throw new NotSupportedException();
 
-		public override void Flush() => throw new NotSupportedException();
+        public override long Position { get => _position; set => throw new NotSupportedException(); }
 
-		public override int Read(byte[] buffer, int offset, int count)
-		{
-			int toRead = count;
-			if (count + Position > Length)
-			{
-				toRead = (int) (Length - Position);
-			}
-			var returnedByteRead = _file.Read(buffer, offset, toRead);
-			Position += returnedByteRead;
-			return returnedByteRead;
-		}
+        public override void Flush()
+        {
+            throw new NotSupportedException();
+        }
 
-		public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        bool _readingHeader;
+        Stream StreamToRead()
+        {
 
-		public override void SetLength(long value) => throw new NotSupportedException();
+        }
 
-		public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+        public override int Read( byte[] buffer, int offset, int count )
+        {
+            if(_actualStream==null)
+            {
+                _actualStream = _callback();
+            }
+            if(_position+count>_startLastStream+_actualStream.Length)
+            {
 
-		public override bool CanRead => true;
-		public override bool CanSeek => false;
-		public override bool CanWrite => false;
-		public override long Length => Header.FileSize;
+            }
+        }
 
-		public override long Position { get; set; }
+        public override long Seek( long offset, SeekOrigin origin )
+        {
+            throw new NotSupportedException();
+        }
 
-		protected override void Dispose(bool disposing)
-		{
-			long realLength = (long)Math.Ceiling((double)Length / TarHeader.BlockSize) * TarHeader.BlockSize;
-			long toSkip = realLength - Position;
-			if (_file.CanSeek)
-			{
-				_file.Seek(toSkip, SeekOrigin.Current);
-			}
-			else
-			{
-				_file.ReadAsync(new byte[] { }, 0, (int)toSkip);//TODO read multiple time if size is larger than long, if file size can be biger than 32 bits
-			}
-			base.Dispose(disposing);
-		}
+        public override void SetLength( long value )
+        {
+            throw new NotSupportedException();
+        }
 
-		public async Task WriteOnFileSystem(string path)
-		{
-			if (!Directory.Exists(path)) throw new ArgumentException("Source path doesn't exist");
-			Directory.CreateDirectory(Path.GetDirectoryName(Header.Name));
-			using (var fileStream = File.Create(Path.GetFileName(Header.Name)))
-			{
-				await _file.CopyToAsync(fileStream);
-			}
-		}
-	}
+        public override void Write( byte[] buffer, int offset, int count )
+        {
+            throw new NotSupportedException();
+        }
+    }
 }

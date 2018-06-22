@@ -1,26 +1,20 @@
-﻿using System;
+using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
+using System.Text;
 
 namespace dotnettar
 {
-	public class TarBallWriter : IDisposable
+    class TarBallWriter : IDisposable
     {
-	    readonly Stream _stream;
-	    public TarBallWriter(Stream stream)
-	    {
-			if(!stream.CanWrite) throw new ArgumentException("Can't write to stream");
-		    _stream = stream;
-	    }
+        private readonly Stream _stream;
 
-		public async Task WriteEntry(TarFile tarEntry)
-		{
-			await tarEntry.AddToTar(_stream);
-		}
+        public TarBallWriter(Stream stream)
+        {
+            _stream = stream;
+        }
 
-	    public void Dispose()
-	    {
-		    _stream?.Dispose();
-	    }
+        public void Dispose() => _stream.Dispose();
+        
     }
 }

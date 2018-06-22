@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
@@ -45,7 +45,7 @@ namespace dotnettar.Tests
 				{
 					while (true)
 					{
-						using (var nextFile = await tarTest.GetNextEntry())
+						using (var nextFile = await tarTest.GetEntryAsync())
 						{
 							if (nextFile == null) break;
 							Assert.That(hashList.ContainsKey(nextFile.Header.Name));
@@ -63,13 +63,5 @@ namespace dotnettar.Tests
 				}
 			}
 		}
-        [Test]
-        public async Task MonoFile()
-        {
-            using (var writeFile = new FileStream("output.tar", FileMode.Create))
-            {
-                await new MonoTarBallStreamReader("ITest.zip").CopyToAsync(writeFile);
-            }
-        }
 	}
 }
