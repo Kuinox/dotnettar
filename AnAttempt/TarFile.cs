@@ -5,17 +5,18 @@ using System.Text;
 
 namespace dotnettar
 {
-    class TarFile : Stream
+    class TarStream : Stream
     {
-        public delegate TarFileStream NextFile();
+        public delegate TarEntry NextFile();
 
         readonly NextFile _callback;
         long _position;
         long _startLastStream;
-        TarFileStream _actualStream;
-        public TarFile(NextFile callback)
+        TarEntry _actualStream;
+        public TarStream(NextFile callback)
         {
             _callback = callback;
+            _actualStream = _callback();
         }
 
         public override bool CanRead => true;
@@ -37,14 +38,20 @@ namespace dotnettar
 
         public override int Read( byte[] buffer, int offset, int count )
         {
-            if(_actualStream==null)
+            long positionInActualStream = _position - _startLastStream;
+            long toRead = count;
+            if(positionInActualStream+count>_actualStream.Length)//Reading too much
+            {
+                toRead = _actualStream.Length - positionInActualStream;
+            }
+            int actualRead = _actualStream.Read(buffer, offset, (int)toRead);
+            _position += actualRead;
+            positionInActualStream = _position - _startLastStream;
+            if(positionInActualStream == Length )//Stream completly read
             {
                 _actualStream = _callback();
             }
-            if(_position+count>_startLastStream+_actualStream.Length)
-            {
-
-            }
+            return actualRead;
         }
 
         public override long Seek( long offset, SeekOrigin origin )
