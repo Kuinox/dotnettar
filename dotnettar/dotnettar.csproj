@@ -1,7 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
-  </PropertyGroup>
-
+    <PropertyGroup>
+        <TargetFramework>netcoreapp2.1</TargetFramework>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Authors>Kuinox</Authors>
+        <Company />
+        <Product>dotnettar</Product>
+        <Description>WIP Library to read or write Tar files.</Description>
+        <PackageTags>tar</PackageTags>
+        <Version>1.0.12</Version>
+    </PropertyGroup>
 </Project>

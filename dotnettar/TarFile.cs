@@ -1,21 +1,27 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace dotnettar
 {
-    class TarFile : Stream
+    public class TarFile : Stream
     {
-        public delegate TarFileStream NextFile();
+        public delegate TarEntry NextFile();
 
         readonly NextFile _callback;
         long _position;
         long _startLastStream;
-        TarFileStream _actualStream;
-        public TarFile(NextFile callback)
+        TarEntry _actualStream;
+        bool _fillMode;
+        int _positionFiller;
+        public TarFile( NextFile callback )
         {
             _callback = callback;
+            _actualStream = _callback();
+        }
+        public TarFile( TarEntry entry )
+        {
+            _callback = () => null;
+            _actualStream = entry;
         }
 
         public override bool CanRead => true;
@@ -33,18 +39,36 @@ namespace dotnettar
             throw new NotSupportedException();
         }
 
-        bool _readingHeader;
-
         public override int Read( byte[] buffer, int offset, int count )
         {
-            if(_actualStream==null)
+            if( _fillMode )
+            {
+                int fill = 20 * 512;
+                int toFill = count;
+                if( count > fill - _positionFiller )
+                {
+                    toFill = fill - _positionFiller;
+                }
+                _positionFiller += toFill;
+                for( int i = 0; i < toFill; i++ )
+                {
+                    buffer[offset + i] = 0;
+                }
+                return toFill;
+            }
+            if( _actualStream == null ) {
+                _fillMode = true;
+                return Read(buffer, offset, count);
+            }
+            int readCount = _actualStream.Read( buffer, offset, count );
+            _position += readCount;
+            if( readCount == 0 )//Stream completly read
             {
                 _actualStream = _callback();
+                _startLastStream = _position;
+                if( _actualStream != null ) return Read( buffer, offset, count );
             }
-            if(_position+count>_startLastStream+_actualStream.Length)
-            {
-
-            }
+            return readCount;
         }
 
         public override long Seek( long offset, SeekOrigin origin )

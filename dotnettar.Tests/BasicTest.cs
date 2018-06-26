@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -30,16 +31,45 @@ namespace dotnettar.Tests
 			}*/
 
 
-        static int file;
-        [Test]
-        public async Task WriteTar()
-        {
-            using( var file1 = File.OpenRead( "redis-4.0.0_content.txt" ) )
-            using( var file2 = File.OpenRead( "redis-4 - Copy.0.0_content.txt" ) )
-            using( var file3 = File.OpenRead( "redis-4 - Copy (3).0.0_content.txt" ) )
-            using( var file4 = File.OpenRead( "redis-4 - Copy (2).0.0_content.txt" ) )
-            {
 
+        [Test]
+        public void TarCopyToMemoryStreamCopyToFile()
+        {
+            using( var file = File.OpenRead( "ITest.zip" ) )
+            using( var archive = new ZipArchive( file ) )
+            using( var outputFile = File.OpenWrite( "outputZip.tar" ) )
+            using(var memoryStream = new MemoryStream())
+            {
+                var zipConverted = new ZipConverter( archive );
+                var output = new TarFile( zipConverted.NextEntry );
+                output.CopyTo( memoryStream );
+                memoryStream.CopyTo( outputFile );
+            }
+        }
+
+        [Test]
+        public void EmptyZipCopyToTar()
+        {
+            using(var newFile = File.OpenRead( "empty.zip" ) )
+            using( var emptyZip = new ZipArchive( newFile ) )
+            using( var outputFile = File.OpenWrite( "emptyTarOutput.tar" ) )
+            {
+                var zipConverted = new ZipConverter( emptyZip );
+                var output = new TarFile( zipConverted.NextEntry );
+                output.CopyTo( outputFile );
+            }
+        }
+
+        [Test]
+        public void TarCopyToFile()
+        {
+            using( var file = File.OpenRead( "ITest.zip" ) )
+            using( var archive = new ZipArchive( file ) )
+            using(var outputFile = File.OpenWrite("outputZip.tar"))
+            {
+                var zipConverted = new ZipConverter( archive );
+                var output = new TarFile( zipConverted.NextEntry );
+                output.CopyTo( outputFile);
             }
         }
 

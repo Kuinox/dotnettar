@@ -8,7 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="empty.zip" />
     <None Remove="ITest.zip" />
+    <None Remove="redis-4 - Copy (2).0.0_content.txt" />
+    <None Remove="redis-4 - Copy (3).0.0_content.txt" />
+    <None Remove="redis-4 - Copy.0.0_content.txt" />
     <None Remove="redis-4.0.0.tar" />
     <None Remove="redis-4.0.0_content.txt" />
     <None Remove="test.tar" />
@@ -18,7 +22,15 @@
     <Content Include="redis-4.0.0/*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="empty.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="ITest.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="redis-4 - Copy (2).0.0_content.txt" />
+    <Content Include="redis-4 - Copy (3).0.0_content.txt" />
+    <Content Include="redis-4 - Copy.0.0_content.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="redis-4.0.0.tar">
@@ -40,6 +52,15 @@
 
   <ItemGroup>
     <ProjectReference Include="..\dotnettar\dotnettar.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="redis-4 - Copy %282%29.0.0_content.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Update="redis-4 - Copy %283%29.0.0_content.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

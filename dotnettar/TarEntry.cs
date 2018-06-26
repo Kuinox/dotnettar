@@ -5,11 +5,12 @@ using System.Text;
 
 namespace dotnettar
 {
-    class TarEntry : Stream
+    public class TarEntry : Stream
     {
         private readonly string _header;
         private readonly Stream _stream;
         long _position;
+        bool _fillMode;
         public TarEntry( TarHeader header, Stream stream )
         {
             _header = header.ToString();
@@ -23,7 +24,7 @@ namespace dotnettar
 
         public override bool CanWrite => false;
 
-        public override long Length => _stream.Length + TarHeader.BlockSize;
+        public override long Length => throw new NotSupportedException();
 
         public override long Position { get => _position; set => throw new NotSupportedException(); }
 
@@ -31,7 +32,22 @@ namespace dotnettar
 
         public override int Read( byte[] buffer, int offset, int count )
         {
-            if( Position < TarHeader.BlockSize )
+            if( _fillMode )
+            {
+                if( _position % 512 == 0 ) return 0;
+                int toFill =  512 - ((int)_position % 512);
+                int toRead = count;
+                if(count>toFill)
+                {
+                    toRead = toFill;
+                }
+                for( int i = 0; i < toRead; i++ )
+                {
+                    buffer[offset + i] = 0;
+                }
+                return toRead;
+            }
+            if( Position < TarHeader.BlockSize )//Position is in header
             {
                 long toRead;
                 if( count > TarHeader.BlockSize - Position )
@@ -47,27 +63,16 @@ namespace dotnettar
                 output.CopyTo( buffer, offset );
                 return output.Length;
             }
-            else if( Position < _stream.Length + TarHeader.BlockSize )
+            var readed = _stream.Read( buffer, offset, count );
+            if(readed == 0 )
             {
-                var readed = _stream.Read( buffer, offset, count );
-                _position += readed;
-                return readed;
+                _fillMode = true;
+                var readCount = Read( buffer, offset, count );
+                _position += readCount;
+                return readCount;
             }
-            long readCount;
-            if( count > Length - Position )
-            {
-                readCount = Length - Position;
-            }
-            else
-            {
-                readCount = count;
-            }
-            _position += readCount;
-            for( int i = 0; i < readCount; i++ )
-            {
-                buffer[offset + i] = 0;
-            }
-            return (int)readCount;
+            _position += readed;
+            return readed;
         }
         public override void Flush()
         {

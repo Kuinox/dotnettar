@@ -28,7 +28,10 @@ namespace dotnettar
 		public int DeviceMinorNumber;
 		public string FileNamePrefix;
 
-		public TarHeader() {
+		public TarHeader(string name, long fileSize) {
+            if( string.IsNullOrWhiteSpace( name ) ) throw new ArgumentException( "Empty name not allowed" );
+            Name = name;
+            FileSize = fileSize;
         }
 		internal static async Task<TarHeader> FromStream(Stream stream, bool throwBadCkecksum = true)
 		{
@@ -66,13 +69,11 @@ namespace dotnettar
 			TarHeader output;
 			try
 			{
-				output = new TarHeader
+				output = new TarHeader( name.Replace( "\0", string.Empty ), OctalToDecimal( long.Parse( fileSize ) ) )
 				{
-					Name = name.Replace("\0", string.Empty),
 					FileMode = new UnixPermission(fileMode),
 					OwnerId = OctalToDecimal(byte.Parse(ownerId)),
 					GroupId = OctalToDecimal(byte.Parse(groupId)),
-					FileSize = OctalToDecimal(long.Parse(fileSize)),
 					LastModification = UnixTimeStampToDateTime(long.Parse(lastModification)),
 					TypeFlag = new[] {typeFlag}[0],
 					NameOfLinkedFile = nameOfLinkedFile.Replace("\0", string.Empty),
