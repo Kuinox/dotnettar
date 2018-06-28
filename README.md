@@ -1,5 +1,5 @@
 # DotNetTar
-Allow to read, create, or write Stream of tar file.
+Allow to read, create, or write Stream of tar file.  
 Nuget package: https://www.nuget.org/packages/dotnettar/
 
 # Why ?
