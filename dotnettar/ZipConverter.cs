@@ -8,11 +8,11 @@ namespace dotnettar
 {
     public class ZipConverter
     {
-        readonly ZipArchive _archive;
         List<ZipArchiveEntry> _entries;
 
         public ZipConverter(ZipArchive archive)
         {
+            if( archive.Mode != ZipArchiveMode.Read ) throw new ArgumentException( "Archive should be in read mode" );
             _entries = new List<ZipArchiveEntry>( archive.Entries );
         }
 

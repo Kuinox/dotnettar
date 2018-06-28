@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 
@@ -13,7 +14,8 @@ namespace dotnettar
         bool _fillMode;
         public TarEntry( TarHeader header, Stream stream )
         {
-            _header = header.ToString();
+            if( !stream.CanRead ) throw new ArgumentException( "Can't read stream" );
+              _header = header.ToString();
             _stream = stream;
         }
 
@@ -32,6 +34,7 @@ namespace dotnettar
 
         public override int Read( byte[] buffer, int offset, int count )
         {
+            Debug.Assert(_stream.CanRead);
             if( _fillMode )
             {
                 if( _position % 512 == 0 ) return 0;

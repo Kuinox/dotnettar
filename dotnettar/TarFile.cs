@@ -17,9 +17,11 @@ namespace dotnettar
         {
             _callback = callback;
             _actualStream = _callback();
+            if( !_actualStream.CanRead ) throw new ArgumentException( "Stream given by callback is not readable" );
         }
         public TarFile( TarEntry entry )
         {
+            if( !entry.CanRead ) throw new ArgumentException( "Can't read stream" );
             _callback = () => null;
             _actualStream = entry;
         }
@@ -65,8 +67,13 @@ namespace dotnettar
             if( readCount == 0 )//Stream completly read
             {
                 _actualStream = _callback();
+                
                 _startLastStream = _position;
-                if( _actualStream != null ) return Read( buffer, offset, count );
+                if( _actualStream != null )
+                {
+                    if( !_actualStream.CanRead ) throw new InvalidOperationException( "Can't read the stream given in the callback" );
+                    return Read( buffer, offset, count );
+                }
             }
             return readCount;
         }
