@@ -43,7 +43,11 @@ namespace CodeCake
             // but "Releases" is by default ignored in https://github.com/github/gitignore/blob/master/VisualStudio.gitignore.
             ConvertableDirectoryPath releasesDir = Cake.Directory("CodeCakeBuilder/Releases");
             CheckRepositoryInfo globalInfo = new CheckRepositoryInfo { Version = gitInfo.SafeNuGetVersion };
-
+            Task( "Check-Repository" )
+                .Does( () =>
+                {
+                    globalInfo = StandardCheckRepository( projectsToPublish, gitInfo );
+                } ); 
             Task("Clean")
                 .Does(() =>
                {

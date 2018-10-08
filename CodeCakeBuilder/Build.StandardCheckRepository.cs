@@ -248,18 +248,18 @@ namespace CodeCake
                             || gitInfo.PreReleaseName == "prerelease"
                             || gitInfo.PreReleaseName == "rc" )
                         {
-                            result.RemoteFeed = new MyGetPublicFeed( "invenietis-release", "MYGET_RELEASE_API_KEY" );
+                            result.RemoteFeed = new MyGetPublicFeed( "kuinox-release", "MYGET_RELEASE_API_KEY" );
                         }
                         else
                         {
                             // An alpha, beta, delta, epsilon, gamma, kappa goes to invenietis-preview.
-                            result.RemoteFeed = new MyGetPublicFeed( "invenietis-preview", "MYGET_PREVIEW_API_KEY" );
+                            result.RemoteFeed = new MyGetPublicFeed( "kuinox-preview", "MYGET_PREVIEW_API_KEY" );
                         }
                     }
                     else
                     {
                         Debug.Assert( gitInfo.IsValidCIBuild );
-                        result.RemoteFeed = new MyGetPublicFeed( "invenietis-ci", "MYGET_CI_API_KEY" );
+                        result.RemoteFeed = new MyGetPublicFeed( "kuinox-ci", "MYGET_CI_API_KEY" );
                     }
                 }
             }
