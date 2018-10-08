@@ -79,16 +79,16 @@ namespace CodeCake
                     //StandardUnitTests( globalInfo.BuildConfiguration, projects.Where( p => p.Name.EndsWith( ".Tests" ) ) );
                 } );
 
-            Task( "Build-And-Push-WebApp" )
-                .IsDependentOn( "Unit-Testing" )
-                .WithCriteria( () => gitInfo.IsValidRelease )
+
+            Task( "Push-NuGet-Packages" )
+                .WithCriteria( () => gitInfo.IsValid )
+                .IsDependentOn( "Create-NuGet-Packages" )
                 .Does( () =>
                 {
-                    // TODO
+                    StandardPushNuGetPackages( globalInfo, releasesDir );
                 } );
-
             Task( "Default" )
-                .IsDependentOn( "Build-And-Push-WebApp" );
+                .IsDependentOn( "Push-NuGet-Packages" );
         }
     }
 }
