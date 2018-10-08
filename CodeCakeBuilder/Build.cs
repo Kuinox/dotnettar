@@ -63,7 +63,13 @@ namespace CodeCake
                 {
                     //StandardSolutionBuild( solutionFileName, gitInfo, globalInfo.BuildConfiguration );
                 } );
-
+            Task( "Create-NuGet-Packages" )
+                .WithCriteria( () => gitInfo.IsValid )
+                .IsDependentOn( "Build" )
+                .Does( () =>
+                {
+                    StandardCreateNuGetPackages( releasesDir, projectsToPublish, gitInfo, globalInfo.BuildConfiguration );
+                } );
             Task( "Unit-Testing" )
                 .IsDependentOn( "Build" )
                 .WithCriteria( () => Cake.InteractiveMode() == InteractiveMode.NoInteraction
@@ -73,6 +79,16 @@ namespace CodeCake
                     //StandardUnitTests( globalInfo.BuildConfiguration, projects.Where( p => p.Name.EndsWith( ".Tests" ) ) );
                 } );
 
+            Task( "Build-And-Push-WebApp" )
+                .IsDependentOn( "Unit-Testing" )
+                .WithCriteria( () => gitInfo.IsValidRelease )
+                .Does( () =>
+                {
+                    // TODO
+                } );
+
+            Task( "Default" )
+                .IsDependentOn( "Build-And-Push-WebApp" );
         }
     }
 }
