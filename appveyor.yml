@@ -1,0 +1,17 @@
+version: build{build}
+image: Visual Studio 2017
+clone_folder: C:\dotnettar
+branches:
+  only:
+    - master
+    - develop
+environment:
+  MYGET_RELEASE_API_KEY:
+    secure: Z1CoJBXAa3MtwWBaFPLic5y8L5+Nmp5rCRG1U8yedxALWZIIGWdURTKo7yO4k4so
+  MYGET_PREVIEW_API_KEY:
+    secure: Z1CoJBXAa3MtwWBaFPLic5y8L5+Nmp5rCRG1U8yedxALWZIIGWdURTKo7yO4k4so
+  MYGET_CI_API_KEY:
+    secure: Z1CoJBXAa3MtwWBaFPLic5y8L5+Nmp5rCRG1U8yedxALWZIIGWdURTKo7yO4k4so
+build_script:
+  - dotnet run --project CodeCakeBuilder -nointeraction
+test: off
