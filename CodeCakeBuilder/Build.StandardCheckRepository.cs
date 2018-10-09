@@ -206,18 +206,15 @@ namespace CodeCake
 
             if( !gitInfo.IsValid )
             {
-                Console.WriteLine("here");
                 if( Cake.InteractiveMode() != InteractiveMode.NoInteraction
                     && Cake.ReadInteractiveOption( "PublishDirtyRepo", "Repository is not ready to be published. Proceed anyway?", 'Y', 'N' ) == 'Y' )
                 {
-                    Console.WriteLine("ah");
                     Cake.Warning( "GitInfo is not valid, but you choose to continue..." );
                     result.IgnoreNoPackagesToProduce = true;
-                    Console.WriteLine("ah");
                 }
                 else
                 {
-                    Console.WriteLine("ah");
+                    Console.WriteLine("here ?");
                     // On Appveyor, we let the build run: this gracefully handles Pull Requests.
                     if( Cake.AppVeyor().IsRunningOnAppVeyor )
                     {
@@ -236,7 +233,7 @@ namespace CodeCake
                 // gitInfo is valid: it is either ci or a release build. 
                 // Local releases must not be pushed on any remote and are copied to LocalFeed/Local
                 // feed (if LocalFeed/ directory above exists).
-                Console.WriteLine("ah");
+                Console.WriteLine("or here ?");
                 var isLocalCIRelease = gitInfo.Info.FinalSemVersion.Prerelease.EndsWith( ".local" );
                 var localFeed = Cake.FindDirectoryAbove( "LocalFeed" );
                 Console.WriteLine("ah");
