@@ -1,5 +1,4 @@
-﻿using System;
-using Cake.Common.Diagnostics;
+﻿using Cake.Common.Diagnostics;
 using Cake.Common.IO;
 using Cake.Common.Solution;
 using Cake.Common.Tools.NuGet;
@@ -23,13 +22,11 @@ namespace CodeCake
             // For packages: each of them must exist.
             IEnumerable<string> ToPackageFiles( IEnumerable<SolutionProject> projects )
             {
-				Console.WriteLine("ah");
                 return projects.Select( p => System.IO.Path.Combine( releasesDir, $"{p.Name}.{globalInfo.Version}.nupkg" ) );
             }
             // For symbols, handle the fact that they may not exist.
             IEnumerable<string> ToSymbolFiles( IEnumerable<SolutionProject> projects )
             {
-				Console.WriteLine("bh");
                 return projects
                         .Select( p => System.IO.Path.Combine( releasesDir, $"{p.Name}.{globalInfo.Version}.symbols.nupkg" ) )
                         .Select( p => new { Path = p, Exists = System.IO.File.Exists( p ) } )

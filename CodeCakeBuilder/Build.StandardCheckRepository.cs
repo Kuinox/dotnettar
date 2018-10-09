@@ -171,6 +171,7 @@ namespace CodeCake
         /// <returns>A new info object.</returns>
         CheckRepositoryInfo StandardCheckRepository( IEnumerable<SolutionProject> projectsToPublish, SimpleRepositoryInfo gitInfo )
         {
+            Console.WriteLine("ah");
             // Local function that displays information for packages already in a feed or not.
             void DispalyFeedPackageResult( string feedId, IReadOnlyCollection<SolutionProject> missingPackages, int totalCount )
             {
@@ -191,7 +192,7 @@ namespace CodeCake
                     Cake.Information( $"    => {existCount} packages already pushed: {projectsToPublish.Except( missingPackages ).Select( p => p.Name ).Concatenate()}." );
                 }
             }
-
+            Console.WriteLine("ah");
             var result = new CheckRepositoryInfo
             {
                 Version = gitInfo.SafeNuGetVersion,
@@ -200,23 +201,29 @@ namespace CodeCake
                     ? "Release"
                     : "Debug"
             };
-
+            Console.WriteLine("ah");
             // We build in Debug for any prerelease except "rc": the last prerelease step is in "Release".
 
             if( !gitInfo.IsValid )
             {
+                Console.WriteLine("ah");
                 if( Cake.InteractiveMode() != InteractiveMode.NoInteraction
                     && Cake.ReadInteractiveOption( "PublishDirtyRepo", "Repository is not ready to be published. Proceed anyway?", 'Y', 'N' ) == 'Y' )
                 {
+                    Console.WriteLine("ah");
                     Cake.Warning( "GitInfo is not valid, but you choose to continue..." );
                     result.IgnoreNoPackagesToProduce = true;
+                    Console.WriteLine("ah");
                 }
                 else
                 {
+                    Console.WriteLine("ah");
                     // On Appveyor, we let the build run: this gracefully handles Pull Requests.
                     if( Cake.AppVeyor().IsRunningOnAppVeyor )
                     {
+                        Console.WriteLine("ah");
                         result.IgnoreNoPackagesToProduce = true;
+                        Console.WriteLine("ah");
                     }
                     else Cake.TerminateWithError( "Repository is not ready to be published." );
                 }
@@ -229,16 +236,21 @@ namespace CodeCake
                 // gitInfo is valid: it is either ci or a release build. 
                 // Local releases must not be pushed on any remote and are copied to LocalFeed/Local
                 // feed (if LocalFeed/ directory above exists).
+                Console.WriteLine("ah");
                 var isLocalCIRelease = gitInfo.Info.FinalSemVersion.Prerelease.EndsWith( ".local" );
                 var localFeed = Cake.FindDirectoryAbove( "LocalFeed" );
+                Console.WriteLine("ah");
                 if( localFeed != null && isLocalCIRelease )
                 {
+                    Console.WriteLine("ah");
                     localFeed = System.IO.Path.Combine( localFeed, "Local" );
+                    Console.WriteLine("ah");
                     System.IO.Directory.CreateDirectory( localFeed );
                 }
+                Console.WriteLine("ah");
                 result.IsLocalCIRelease = isLocalCIRelease;
                 result.LocalFeedPath = localFeed;
-
+                Console.WriteLine("ah");
                 // Creating the right NuGetRemoteFeed according to the release level.
                 if( !isLocalCIRelease )
                 {
@@ -252,6 +264,7 @@ namespace CodeCake
                         }
                         else
                         {
+                            Console.WriteLine("ah");
                             // An alpha, beta, delta, epsilon, gamma, kappa goes to kuinox-preview.
                             result.RemoteFeed = new MyGetPublicFeed( "kuinox-preview", "MYGET_PREVIEW_API_KEY" );
                         }
@@ -259,6 +272,7 @@ namespace CodeCake
                     else
                     {
                         Debug.Assert( gitInfo.IsValidCIBuild );
+                        Console.WriteLine("ah");
                         result.RemoteFeed = new MyGetPublicFeed( "kuinox-ci", "MYGET_CI_API_KEY" );
                     }
                 }
@@ -277,23 +291,32 @@ namespace CodeCake
                                         ExistsAsync = result.RemoteFeed.CheckPackageAsync( Cake, client, p.Name, gitInfo.SafeNuGetVersion )
                                     } )
                                     .ToList();
+                    Console.WriteLine("ah");
                     System.Threading.Tasks.Task.WaitAll( requests.Select( r => r.ExistsAsync ).ToArray() );
+                    Console.WriteLine("ah");
                     IEnumerable<SolutionProject> notOk = requests.Where( r => !r.ExistsAsync.Result ).Select( r => r.Project );
+                    Console.WriteLine("ah");
                     result.RemoteFeed.PackagesToPush.AddRange( notOk );
+                    Console.WriteLine("ah");
                     DispalyFeedPackageResult( result.RemoteFeed.PushUrl, result.RemoteFeed.PackagesToPush, requests.Count );
                     // If there is at least a package to push, challenge the key right now: if the key can not be obtained, then
                     // we clear the list.
+                    Console.WriteLine("ah");
                     var apiKey = Cake.InteractiveEnvironmentVariable( result.RemoteFeed.APIKeyName );
+                    Console.WriteLine("ah");
                     if( string.IsNullOrEmpty( apiKey ) )
                     {
                         Cake.Information( $"Could not resolve {result.RemoteFeed.APIKeyName}. Push to {result.RemoteFeed.PushUrl} is skipped." );
+                        Console.WriteLine("ah");
                         result.RemoteFeed.PackagesToPush.Clear();
+                        Console.WriteLine("ah");
                     }
                     else result.RemoteFeed.ActualAPIKey = apiKey;
                 }
             }
             if( result.LocalFeedPath != null )
             {
+                Console.WriteLine("bh");
                 var lookup = projectsToPublish
                                 .Select( p => new
                                 {
@@ -306,38 +329,49 @@ namespace CodeCake
                                     Exists = System.IO.File.Exists( x.Path )
                                 } )
                                 .ToList();
+                Console.WriteLine("bh");
                 IEnumerable<SolutionProject> notOk = lookup.Where( r => !r.Exists ).Select( r => r.Project );
+                Console.WriteLine("bh");
                 result.LocalFeedPackagesToCopy.AddRange( notOk );
+                Console.WriteLine("bh");
                 DispalyFeedPackageResult( result.LocalFeedPath, result.LocalFeedPackagesToCopy, lookup.Count );
             }
             var nbPackagesToPublish = result.ActualPackagesToPublish.Count();
             if( nbPackagesToPublish == 0 )
             {
+                Console.WriteLine("bh");
                 Cake.Information( $"No packages out of {projectsToPublish.Count()} projects to publish." );
                 if( Cake.Argument( "IgnoreNoPackagesToProduce", 'N' ) == 'Y' )
                 {
+                    Console.WriteLine("bh");
                     result.IgnoreNoPackagesToProduce = true;
                 }
             }
             else
             {
+                Console.WriteLine("bh");
                 Cake.Information( $"Should actually publish {nbPackagesToPublish} out of {projectsToPublish.Count()} projects with version={gitInfo.SafeNuGetVersion} and configuration={result.BuildConfiguration}: {result.ActualPackagesToPublish.Select( p => p.Name ).Concatenate()}" );
             }
+            Console.WriteLine("bh");
             IAppVeyorProvider appVeyor = Cake.AppVeyor();
+            Console.WriteLine("bh");
             if( appVeyor.IsRunningOnAppVeyor )
             {
                 if( result.ShouldStop )
                 {
+                    Console.WriteLine("bh");
                     appVeyor.UpdateBuildVersion( $"{gitInfo.SafeNuGetVersion} - Skipped ({appVeyor.Environment.Build.Number})" );
                 }
                 else
                 {
                     try
                     {
+                        Console.WriteLine("bh");
                         appVeyor.UpdateBuildVersion( gitInfo.SafeNuGetVersion );
                     }
                     catch
                     {
+                        Console.WriteLine("bh");
                         appVeyor.UpdateBuildVersion( $"{gitInfo.SafeNuGetVersion} ({appVeyor.Environment.Build.Number})" );
                     }
                 }
