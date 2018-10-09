@@ -235,6 +235,7 @@ namespace CodeCake
                 // feed (if LocalFeed/ directory above exists).
                 Console.WriteLine("or here ?");
                 var isLocalCIRelease = gitInfo.Info.FinalSemVersion.Prerelease.EndsWith( ".local" );
+                Console.WriteLine("right here ?");
                 var localFeed = Cake.FindDirectoryAbove( "LocalFeed" );
                 Console.WriteLine("ah");
                 if( localFeed != null && isLocalCIRelease )
