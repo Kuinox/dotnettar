@@ -252,7 +252,7 @@ namespace CodeCake
                         }
                         else
                         {
-                            // An alpha, beta, delta, epsilon, gamma, kappa goes to invenietis-preview.
+                            // An alpha, beta, delta, epsilon, gamma, kappa goes to kuinox-preview.
                             result.RemoteFeed = new MyGetPublicFeed( "kuinox-preview", "MYGET_PREVIEW_API_KEY" );
                         }
                     }

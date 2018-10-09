@@ -5,6 +5,14 @@
     <TargetFramework>net461</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Build.StandardPushNuGetPackages.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Build.StandardPushNuGetPackages.cs" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="CK.Text" Version="7.0.0" />
