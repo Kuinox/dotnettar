@@ -233,7 +233,6 @@ namespace CodeCake
                 var localFeed = Cake.FindDirectoryAbove( "LocalFeed" );
                 if( localFeed != null && isLocalCIRelease )
                 {
-                    Console.WriteLine("wtf");
                     localFeed = System.IO.Path.Combine( localFeed, "Local" );
                     System.IO.Directory.CreateDirectory( localFeed );
                 }
