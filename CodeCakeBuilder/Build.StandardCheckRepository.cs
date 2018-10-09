@@ -206,7 +206,7 @@ namespace CodeCake
 
             if( !gitInfo.IsValid )
             {
-                Console.WriteLine("ah");
+                Console.WriteLine("here");
                 if( Cake.InteractiveMode() != InteractiveMode.NoInteraction
                     && Cake.ReadInteractiveOption( "PublishDirtyRepo", "Repository is not ready to be published. Proceed anyway?", 'Y', 'N' ) == 'Y' )
                 {
